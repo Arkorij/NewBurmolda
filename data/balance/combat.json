@@ -20,9 +20,9 @@
     "ВЕРХОВНАЯ БУРМОЛДА ☣️"
   ],
   "BOSS_HP_MULT": {
-    "kalitin": 1.9,
-    "tsizi": 1.6,
-    "zhizha": 1.7
+    "kalitin": 5.7,
+    "tsizi": 3.2,
+    "zhizha": 3.4
   },
   "ATTACK_MISS": 0.08
 }

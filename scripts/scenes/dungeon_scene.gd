@@ -369,11 +369,19 @@ func _fish_step(delta: float) -> void:
 
 
 # ─────────────── бой / лут ───────────────
+const HELL_BOSS_KEY := {"mini": "overseer", "boss": "pekl_master", "tm": "tm"}
+
 func _fight(m: Dictionary) -> void:
     busy = true
     var b = load("res://scenes/Battle.tscn").instantiate()
     b.enemy = m.enemy
     b.danger = _danger()
+    b.biome = "hell"    # Пекло — рамка теснее + стены жгут (тот же эффект, что вулкан/ад в надмире)
+    # боссы Пекла ведут бой авторскими китами (мувсет по типу комнаты); HP/урон
+    # по-прежнему считаются формулой шахты (_boss_enemy) — boss_key НЕ тянет
+    # мировой BOSS_HP_MULT, т.к. этих ключей нет в DataDB.bosses.
+    if m.get("boss", false) and HELL_BOSS_KEY.has(st.kind):
+        b.boss_key = HELL_BOSS_KEY[st.kind]
     b.battle_over.connect(_after_fight.bind(b, m))
     overlay.add_child(b)
 
