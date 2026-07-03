@@ -1,0 +1,38 @@
+[
+  {
+    "prefix": "Ржавый",
+    "mult": 1.0,
+    "color": "rust",
+    "price": 10
+  },
+  {
+    "prefix": "Обычный",
+    "mult": 1.6,
+    "color": "iron",
+    "price": 28
+  },
+  {
+    "prefix": "Крепкий",
+    "mult": 2.4,
+    "color": "steel",
+    "price": 60
+  },
+  {
+    "prefix": "Кринжовый",
+    "mult": 3.4,
+    "color": "acid",
+    "price": 130
+  },
+  {
+    "prefix": "Свэговый",
+    "mult": 4.8,
+    "color": "gold",
+    "price": 300
+  },
+  {
+    "prefix": "Легендарный",
+    "mult": 6.8,
+    "color": "purple",
+    "price": 700
+  }
+]

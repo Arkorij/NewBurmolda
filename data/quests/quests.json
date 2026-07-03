@@ -1,0 +1,133 @@
+{
+  "shest_dew": {
+    "name": "Свежая роса",
+    "giver": "shest",
+    "turnin": "shest",
+    "desc": "Шестухина просит проредить болотную мелочь: комаров, жаб, ужей.",
+    "type": "kill",
+    "keys": [
+      "комар",
+      "жаб",
+      "уж"
+    ],
+    "count": 3,
+    "reward": {
+      "burmolda": 30,
+      "cringe": 10,
+      "rep": 2
+    },
+    "requires": null
+  },
+  "yampol_swag": {
+    "name": "Докажи свэг",
+    "giver": "yampol",
+    "turnin": "yampol",
+    "desc": "Ямполь: «Завали 4 лесных твари — тогда поговорим о силе».",
+    "type": "kill",
+    "keys": [
+      "паук",
+      "волк",
+      "гриб",
+      "лиан"
+    ],
+    "count": 4,
+    "reward": {
+      "burmolda": 40,
+      "cringe": 12,
+      "rep": 2,
+      "item": "зелье свэга"
+    },
+    "requires": "shest_dew"
+  },
+  "tusha_meat": {
+    "name": "Мясной заказ",
+    "giver": "tusha",
+    "turnin": "tusha",
+    "desc": "Туше нужно мясо: 4 кабана, волка или грязевика.",
+    "type": "kill",
+    "keys": [
+      "кабан",
+      "волк",
+      "грязевик"
+    ],
+    "count": 4,
+    "reward": {
+      "burmolda": 50,
+      "cringe": 10,
+      "rep": 1,
+      "item": "стейк из топляка"
+    },
+    "requires": null
+  },
+  "fish_revenge": {
+    "name": "Месть воде",
+    "giver": "fish_npc",
+    "turnin": "fish_npc",
+    "desc": "Злая Рыба требует утопить 3 водных гадов: рыб, медуз, пиявок.",
+    "type": "kill",
+    "keys": [
+      "рыб",
+      "медуз",
+      "пиявк"
+    ],
+    "count": 3,
+    "reward": {
+      "burmolda": 35,
+      "cringe": 8,
+      "rep": 1
+    },
+    "requires": null
+  },
+  "ded_bones": {
+    "name": "Старые счёты",
+    "giver": "ded",
+    "turnin": "ded",
+    "desc": "Дед Пздц: «Развей этого летучего балабола Цизи. Лично».",
+    "type": "boss",
+    "boss": "tsizi_defeated",
+    "reward": {
+      "burmolda": 80,
+      "cringe": 20,
+      "rep": 5,
+      "item": "зелье свэга"
+    },
+    "requires": null
+  },
+  "baba_warrior": {
+    "name": "Настоящий воин",
+    "giver": "baba",
+    "turnin": "baba",
+    "desc": "Боевая Баба: «Покажи хребет — завали 6 тварей в пустошах и костях».",
+    "type": "kill",
+    "keys": [
+      "мутант",
+      "костя",
+      "гопник",
+      "скелет",
+      "пёс",
+      "череп"
+    ],
+    "count": 6,
+    "reward": {
+      "burmolda": 70,
+      "cringe": 18,
+      "rep": 4,
+      "item": "мясной паёк"
+    },
+    "requires": null
+  },
+  "yampol_final": {
+    "name": "Конец костям",
+    "giver": "yampol",
+    "turnin": "yampol",
+    "desc": "Ямполь: «Усмири Калитина — и ты ВЕРХОВНАЯ БУРМОЛДА».",
+    "type": "boss",
+    "boss": "kalitin_defeated",
+    "reward": {
+      "burmolda": 150,
+      "cringe": 40,
+      "rep": 10
+    },
+    "requires": "ded_bones"
+  }
+}

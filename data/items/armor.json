@@ -1,0 +1,352 @@
+[
+  {
+    "id": "armor_0_0",
+    "name": "Ржавый роба",
+    "slot": "armor",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "def": 2,
+      "hp": 4
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 0
+  },
+  {
+    "id": "armor_0_1",
+    "name": "Обычный роба",
+    "slot": "armor",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "def": 3,
+      "hp": 6
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 0
+  },
+  {
+    "id": "armor_0_2",
+    "name": "Крепкий роба",
+    "slot": "armor",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "def": 5,
+      "hp": 10
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 0
+  },
+  {
+    "id": "armor_0_3",
+    "name": "Кринжовый роба",
+    "slot": "armor",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "def": 7,
+      "hp": 14
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 0
+  },
+  {
+    "id": "armor_0_4",
+    "name": "Свэговый роба",
+    "slot": "armor",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "def": 10,
+      "hp": 19
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 0
+  },
+  {
+    "id": "armor_1_0",
+    "name": "Ржавый куртка",
+    "slot": "armor",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "def": 2,
+      "hp": 4
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 1
+  },
+  {
+    "id": "armor_1_1",
+    "name": "Обычный куртка",
+    "slot": "armor",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "def": 3,
+      "hp": 6
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 1
+  },
+  {
+    "id": "armor_1_2",
+    "name": "Крепкий куртка",
+    "slot": "armor",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "def": 5,
+      "hp": 10
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 1
+  },
+  {
+    "id": "armor_1_3",
+    "name": "Кринжовый куртка",
+    "slot": "armor",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "def": 7,
+      "hp": 14
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 1
+  },
+  {
+    "id": "armor_1_4",
+    "name": "Свэговый куртка",
+    "slot": "armor",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "def": 10,
+      "hp": 19
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 1
+  },
+  {
+    "id": "armor_2_0",
+    "name": "Ржавый панцирь",
+    "slot": "armor",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "def": 2,
+      "hp": 4
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 2
+  },
+  {
+    "id": "armor_2_1",
+    "name": "Обычный панцирь",
+    "slot": "armor",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "def": 3,
+      "hp": 6
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 2
+  },
+  {
+    "id": "armor_2_2",
+    "name": "Крепкий панцирь",
+    "slot": "armor",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "def": 5,
+      "hp": 10
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 2
+  },
+  {
+    "id": "armor_2_3",
+    "name": "Кринжовый панцирь",
+    "slot": "armor",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "def": 7,
+      "hp": 14
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 2
+  },
+  {
+    "id": "armor_2_4",
+    "name": "Свэговый панцирь",
+    "slot": "armor",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "def": 10,
+      "hp": 19
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 2
+  },
+  {
+    "id": "armor_3_0",
+    "name": "Ржавый латы",
+    "slot": "armor",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "def": 2,
+      "hp": 4
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 3
+  },
+  {
+    "id": "armor_3_1",
+    "name": "Обычный латы",
+    "slot": "armor",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "def": 3,
+      "hp": 6
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 3
+  },
+  {
+    "id": "armor_3_2",
+    "name": "Крепкий латы",
+    "slot": "armor",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "def": 5,
+      "hp": 10
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 3
+  },
+  {
+    "id": "armor_3_3",
+    "name": "Кринжовый латы",
+    "slot": "armor",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "def": 7,
+      "hp": 14
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 3
+  },
+  {
+    "id": "armor_3_4",
+    "name": "Свэговый латы",
+    "slot": "armor",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "def": 10,
+      "hp": 19
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 3
+  },
+  {
+    "id": "armor_4_0",
+    "name": "Ржавый броня свэга",
+    "slot": "armor",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "def": 2,
+      "hp": 4
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 4
+  },
+  {
+    "id": "armor_4_1",
+    "name": "Обычный броня свэга",
+    "slot": "armor",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "def": 3,
+      "hp": 6
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 4
+  },
+  {
+    "id": "armor_4_2",
+    "name": "Крепкий броня свэга",
+    "slot": "armor",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "def": 5,
+      "hp": 10
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 4
+  },
+  {
+    "id": "armor_4_3",
+    "name": "Кринжовый броня свэга",
+    "slot": "armor",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "def": 7,
+      "hp": 14
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 4
+  },
+  {
+    "id": "armor_4_4",
+    "name": "Свэговый броня свэга",
+    "slot": "armor",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "def": 10,
+      "hp": 19
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 4
+  }
+]

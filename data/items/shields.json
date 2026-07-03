@@ -1,0 +1,282 @@
+[
+  {
+    "id": "shield_0_0",
+    "name": "Ржавый щит",
+    "slot": "shield",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "def": 2,
+      "block": 3
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 0
+  },
+  {
+    "id": "shield_0_1",
+    "name": "Обычный щит",
+    "slot": "shield",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "def": 3,
+      "block": 5
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 0
+  },
+  {
+    "id": "shield_0_2",
+    "name": "Крепкий щит",
+    "slot": "shield",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "def": 5,
+      "block": 7
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 0
+  },
+  {
+    "id": "shield_0_3",
+    "name": "Кринжовый щит",
+    "slot": "shield",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "def": 7,
+      "block": 9
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 0
+  },
+  {
+    "id": "shield_0_4",
+    "name": "Свэговый щит",
+    "slot": "shield",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "def": 10,
+      "block": 11
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 0
+  },
+  {
+    "id": "shield_1_0",
+    "name": "Ржавый крышка",
+    "slot": "shield",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "def": 2,
+      "block": 3
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 1
+  },
+  {
+    "id": "shield_1_1",
+    "name": "Обычный крышка",
+    "slot": "shield",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "def": 3,
+      "block": 5
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 1
+  },
+  {
+    "id": "shield_1_2",
+    "name": "Крепкий крышка",
+    "slot": "shield",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "def": 5,
+      "block": 7
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 1
+  },
+  {
+    "id": "shield_1_3",
+    "name": "Кринжовый крышка",
+    "slot": "shield",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "def": 7,
+      "block": 9
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 1
+  },
+  {
+    "id": "shield_1_4",
+    "name": "Свэговый крышка",
+    "slot": "shield",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "def": 10,
+      "block": 11
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 1
+  },
+  {
+    "id": "shield_2_0",
+    "name": "Ржавый баклер",
+    "slot": "shield",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "def": 2,
+      "block": 3
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 2
+  },
+  {
+    "id": "shield_2_1",
+    "name": "Обычный баклер",
+    "slot": "shield",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "def": 3,
+      "block": 5
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 2
+  },
+  {
+    "id": "shield_2_2",
+    "name": "Крепкий баклер",
+    "slot": "shield",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "def": 5,
+      "block": 7
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 2
+  },
+  {
+    "id": "shield_2_3",
+    "name": "Кринжовый баклер",
+    "slot": "shield",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "def": 7,
+      "block": 9
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 2
+  },
+  {
+    "id": "shield_2_4",
+    "name": "Свэговый баклер",
+    "slot": "shield",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "def": 10,
+      "block": 11
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 2
+  },
+  {
+    "id": "shield_3_0",
+    "name": "Ржавый эгида",
+    "slot": "shield",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "def": 2,
+      "block": 3
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 3
+  },
+  {
+    "id": "shield_3_1",
+    "name": "Обычный эгида",
+    "slot": "shield",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "def": 3,
+      "block": 5
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 3
+  },
+  {
+    "id": "shield_3_2",
+    "name": "Крепкий эгида",
+    "slot": "shield",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "def": 5,
+      "block": 7
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 3
+  },
+  {
+    "id": "shield_3_3",
+    "name": "Кринжовый эгида",
+    "slot": "shield",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "def": 7,
+      "block": 9
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 3
+  },
+  {
+    "id": "shield_3_4",
+    "name": "Свэговый эгида",
+    "slot": "shield",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "def": 10,
+      "block": 11
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 3
+  }
+]

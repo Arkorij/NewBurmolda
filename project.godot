@@ -1,0 +1,25 @@
+; Godot 4.7 project — БУРМОЛДА (перенос с pygame)
+config_version=5
+
+[application]
+config/name="Бурмолда"
+config/description="Ядовитое болото, сигма-ведьмы и бурмолда. Перенос с pygame на Godot 4."
+run/main_scene="res://scenes/Main.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+
+[autoload]
+DataDB="*res://scripts/core/data_db.gd"
+GameState="*res://scripts/core/game_state.gd"
+Sfx="*res://scripts/core/sfx.gd"
+
+[display]
+window/size/viewport_width=640
+window/size/viewport_height=480
+window/size/window_width_override=1280
+window/size/window_height_override=960
+window/stretch/mode="canvas_items"
+window/stretch/aspect="keep"
+
+[rendering]
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

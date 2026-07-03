@@ -1,0 +1,392 @@
+[
+  {
+    "id": "weapon_0_0",
+    "name": "Ржавый меч",
+    "slot": "weapon",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "atk": 3
+    },
+    "buy": 14,
+    "sell": 3,
+    "base": 0
+  },
+  {
+    "id": "weapon_0_1",
+    "name": "Обычный меч",
+    "slot": "weapon",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "atk": 5
+    },
+    "buy": 39,
+    "sell": 9,
+    "base": 0
+  },
+  {
+    "id": "weapon_0_2",
+    "name": "Крепкий меч",
+    "slot": "weapon",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "atk": 7
+    },
+    "buy": 84,
+    "sell": 21,
+    "base": 0
+  },
+  {
+    "id": "weapon_0_3",
+    "name": "Кринжовый меч",
+    "slot": "weapon",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "atk": 10
+    },
+    "buy": 182,
+    "sell": 45,
+    "base": 0
+  },
+  {
+    "id": "weapon_0_4",
+    "name": "Свэговый меч",
+    "slot": "weapon",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "atk": 14
+    },
+    "buy": 420,
+    "sell": 105,
+    "base": 0
+  },
+  {
+    "id": "weapon_0_5",
+    "name": "Легендарный меч",
+    "slot": "weapon",
+    "tier": 5,
+    "color": "purple",
+    "buffs": {
+      "atk": 20
+    },
+    "buy": 979,
+    "sell": 244,
+    "base": 0
+  },
+  {
+    "id": "weapon_1_0",
+    "name": "Ржавый клинок",
+    "slot": "weapon",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "atk": 3
+    },
+    "buy": 14,
+    "sell": 3,
+    "base": 1
+  },
+  {
+    "id": "weapon_1_1",
+    "name": "Обычный клинок",
+    "slot": "weapon",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "atk": 5
+    },
+    "buy": 39,
+    "sell": 9,
+    "base": 1
+  },
+  {
+    "id": "weapon_1_2",
+    "name": "Крепкий клинок",
+    "slot": "weapon",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "atk": 7
+    },
+    "buy": 84,
+    "sell": 21,
+    "base": 1
+  },
+  {
+    "id": "weapon_1_3",
+    "name": "Кринжовый клинок",
+    "slot": "weapon",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "atk": 10
+    },
+    "buy": 182,
+    "sell": 45,
+    "base": 1
+  },
+  {
+    "id": "weapon_1_4",
+    "name": "Свэговый клинок",
+    "slot": "weapon",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "atk": 14
+    },
+    "buy": 420,
+    "sell": 105,
+    "base": 1
+  },
+  {
+    "id": "weapon_1_5",
+    "name": "Легендарный клинок",
+    "slot": "weapon",
+    "tier": 5,
+    "color": "purple",
+    "buffs": {
+      "atk": 20
+    },
+    "buy": 979,
+    "sell": 244,
+    "base": 1
+  },
+  {
+    "id": "weapon_2_0",
+    "name": "Ржавый тесак",
+    "slot": "weapon",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "atk": 3
+    },
+    "buy": 14,
+    "sell": 3,
+    "base": 2
+  },
+  {
+    "id": "weapon_2_1",
+    "name": "Обычный тесак",
+    "slot": "weapon",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "atk": 5
+    },
+    "buy": 39,
+    "sell": 9,
+    "base": 2
+  },
+  {
+    "id": "weapon_2_2",
+    "name": "Крепкий тесак",
+    "slot": "weapon",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "atk": 7
+    },
+    "buy": 84,
+    "sell": 21,
+    "base": 2
+  },
+  {
+    "id": "weapon_2_3",
+    "name": "Кринжовый тесак",
+    "slot": "weapon",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "atk": 10
+    },
+    "buy": 182,
+    "sell": 45,
+    "base": 2
+  },
+  {
+    "id": "weapon_2_4",
+    "name": "Свэговый тесак",
+    "slot": "weapon",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "atk": 14
+    },
+    "buy": 420,
+    "sell": 105,
+    "base": 2
+  },
+  {
+    "id": "weapon_2_5",
+    "name": "Легендарный тесак",
+    "slot": "weapon",
+    "tier": 5,
+    "color": "purple",
+    "buffs": {
+      "atk": 20
+    },
+    "buy": 979,
+    "sell": 244,
+    "base": 2
+  },
+  {
+    "id": "weapon_3_0",
+    "name": "Ржавый катана",
+    "slot": "weapon",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "atk": 3
+    },
+    "buy": 14,
+    "sell": 3,
+    "base": 3
+  },
+  {
+    "id": "weapon_3_1",
+    "name": "Обычный катана",
+    "slot": "weapon",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "atk": 5
+    },
+    "buy": 39,
+    "sell": 9,
+    "base": 3
+  },
+  {
+    "id": "weapon_3_2",
+    "name": "Крепкий катана",
+    "slot": "weapon",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "atk": 7
+    },
+    "buy": 84,
+    "sell": 21,
+    "base": 3
+  },
+  {
+    "id": "weapon_3_3",
+    "name": "Кринжовый катана",
+    "slot": "weapon",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "atk": 10
+    },
+    "buy": 182,
+    "sell": 45,
+    "base": 3
+  },
+  {
+    "id": "weapon_3_4",
+    "name": "Свэговый катана",
+    "slot": "weapon",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "atk": 14
+    },
+    "buy": 420,
+    "sell": 105,
+    "base": 3
+  },
+  {
+    "id": "weapon_3_5",
+    "name": "Легендарный катана",
+    "slot": "weapon",
+    "tier": 5,
+    "color": "purple",
+    "buffs": {
+      "atk": 20
+    },
+    "buy": 979,
+    "sell": 244,
+    "base": 3
+  },
+  {
+    "id": "weapon_4_0",
+    "name": "Ржавый бурмолда-резак",
+    "slot": "weapon",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "atk": 3
+    },
+    "buy": 14,
+    "sell": 3,
+    "base": 4
+  },
+  {
+    "id": "weapon_4_1",
+    "name": "Обычный бурмолда-резак",
+    "slot": "weapon",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "atk": 5
+    },
+    "buy": 39,
+    "sell": 9,
+    "base": 4
+  },
+  {
+    "id": "weapon_4_2",
+    "name": "Крепкий бурмолда-резак",
+    "slot": "weapon",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "atk": 7
+    },
+    "buy": 84,
+    "sell": 21,
+    "base": 4
+  },
+  {
+    "id": "weapon_4_3",
+    "name": "Кринжовый бурмолда-резак",
+    "slot": "weapon",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "atk": 10
+    },
+    "buy": 182,
+    "sell": 45,
+    "base": 4
+  },
+  {
+    "id": "weapon_4_4",
+    "name": "Свэговый бурмолда-резак",
+    "slot": "weapon",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "atk": 14
+    },
+    "buy": 420,
+    "sell": 105,
+    "base": 4
+  },
+  {
+    "id": "weapon_4_5",
+    "name": "Легендарный бурмолда-резак",
+    "slot": "weapon",
+    "tier": 5,
+    "color": "purple",
+    "buffs": {
+      "atk": 20
+    },
+    "buy": 979,
+    "sell": 244,
+    "base": 4
+  }
+]

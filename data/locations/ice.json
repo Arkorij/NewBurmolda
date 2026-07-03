@@ -1,0 +1,65 @@
+{
+  "name": "Ледяной Перевал",
+  "biome": "ice",
+  "danger": 4,
+  "map": [
+    "########################################",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "#iiisssssssiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "#iiisssssssiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "#iiisssssssiiiiiiiiiiiiiiiiiiiiiiiiiii7#",
+    "#iiisssssssiiiiii#####iiiiiiiiiiiiiiiii#",
+    "#iiisssssssiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "#iiisssssssiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "#6iiiiiiiiiiiiiiiiiiZiiiiiiiiiiiiiiiiii#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiissssssssiiiii#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiissssssssiiiii#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiissssssssiiiii#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiissssssssiiiii#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiissssssssiiiii#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiissssssssiiiii#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "########################################"
+  ],
+  "entry": [
+    3,
+    4
+  ],
+  "npcs": {},
+  "exits": {
+    "6": "mire",
+    "7": "wastes"
+  },
+  "boss": "tsizi",
+  "wind": true,
+  "fish": false,
+  "monsters": [
+    [
+      "Ходячий Вентилятор",
+      24,
+      6
+    ],
+    [
+      "Сквозняк",
+      20,
+      5
+    ],
+    [
+      "Снеговик-психопат",
+      30,
+      7
+    ],
+    [
+      "Ледяная Сосулька",
+      22,
+      7
+    ]
+  ],
+  "min_level": 1,
+  "nodes": {}
+}

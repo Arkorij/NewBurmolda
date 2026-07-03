@@ -1,0 +1,71 @@
+{
+  "name": "Ледяная Опера",
+  "biome": "opera_ice",
+  "danger": 13,
+  "map": [
+    "########################################",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "#iii#ii#iiiissiiiiiii#iiisiiiiiiiiiiiii#",
+    "#iiiiiiiiiisisiissiiisii#iisiiiiiiiiisi#",
+    "#iiii#iiisisiiiiiisiiisiiisi#iiiiiiiiii#",
+    "#iiiiiiiisiiiiisiiisiiii#iisiiiiiiiiisi#",
+    "#iiiiiisii#iiiiisiiiiisiiis#iiiiisssiii#",
+    "#i#iiiii#isiiiiiiiiiiiisiiiiii#isOisiii#",
+    "#iiiiiiiii#iiiiiiiiisiiiiiiiiiiiiiiiiii#",
+    "#iiiiiiiiiisiiisiii#i#iiiiiisiiiiiisisi#",
+    "#iiisiiiiiiiiiisiiiiiiisiiiisiiiiiiiiii#",
+    "#isiiiii#iiiiii#isiiiiiii#iiiiiiiiiiiii#",
+    "#iiiiiiiiiiiiiiiisiiisiiiiiiiiiiiiiisii#",
+    "4iiiiiiiiiiiiisiisiii#iiisiiiii#isiiiii2",
+    "#iiiiiiiiiiiisiiiisiiiiisisiissiiiiiiii#",
+    "#iiiiiiiii#iiiis#iiiiiiii#iiiiiiiiiiiii#",
+    "#iiiiiiiiiiiiiiisiii#iiiiiiisiiiiisiiii#",
+    "#iiiiiiiiisisiissiiiiiii#iiiiisiiisiiii#",
+    "#iiiiiiiiiiiiisiiisisiiiiiiiiiiiiiiiiii#",
+    "#iiiiifiiiisisisisiiiiiisiiiiiiisisiiii#",
+    "#iisiissiii#isiisissiiisi#iiisi#siiiiii#",
+    "#iiiisiiiiiiiiisiiii#iiiiiiiiiisiisiiii#",
+    "#iii#isssiiiiisiisiiiiiiiiiiiiiiiiiss#i#",
+    "#isisiiiiiiiiisiiiiiis#iiiiiisiiiiiiisi#",
+    "#iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii#",
+    "########################################"
+  ],
+  "entry": [
+    3,
+    13
+  ],
+  "npcs": {
+    "O": "singer"
+  },
+  "exits": {
+    "4": "acidfield",
+    "2": "despair"
+  },
+  "boss": null,
+  "wind": true,
+  "fish": false,
+  "monsters": [
+    [
+      "Ледяной Тенор",
+      44,
+      12
+    ],
+    [
+      "Морозный Фанат",
+      38,
+      11
+    ],
+    [
+      "Хрустальный Вой",
+      40,
+      13
+    ],
+    [
+      "Снежный Голем",
+      52,
+      12
+    ]
+  ],
+  "min_level": 8,
+  "nodes": {}
+}

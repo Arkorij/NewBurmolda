@@ -1,0 +1,352 @@
+[
+  {
+    "id": "trinket_0_0",
+    "name": "Ржавый оберег",
+    "slot": "trinket",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "swag": 1,
+      "crit": 2
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 0
+  },
+  {
+    "id": "trinket_0_1",
+    "name": "Обычный оберег",
+    "slot": "trinket",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "swag": 2,
+      "crit": 4
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 0
+  },
+  {
+    "id": "trinket_0_2",
+    "name": "Крепкий оберег",
+    "slot": "trinket",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "swag": 2,
+      "crit": 6
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 0
+  },
+  {
+    "id": "trinket_0_3",
+    "name": "Кринжовый оберег",
+    "slot": "trinket",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "swag": 3,
+      "crit": 8
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 0
+  },
+  {
+    "id": "trinket_0_4",
+    "name": "Свэговый оберег",
+    "slot": "trinket",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "swag": 5,
+      "crit": 10
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 0
+  },
+  {
+    "id": "trinket_1_0",
+    "name": "Ржавый амулет",
+    "slot": "trinket",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "swag": 1,
+      "crit": 2
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 1
+  },
+  {
+    "id": "trinket_1_1",
+    "name": "Обычный амулет",
+    "slot": "trinket",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "swag": 2,
+      "crit": 4
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 1
+  },
+  {
+    "id": "trinket_1_2",
+    "name": "Крепкий амулет",
+    "slot": "trinket",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "swag": 2,
+      "crit": 6
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 1
+  },
+  {
+    "id": "trinket_1_3",
+    "name": "Кринжовый амулет",
+    "slot": "trinket",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "swag": 3,
+      "crit": 8
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 1
+  },
+  {
+    "id": "trinket_1_4",
+    "name": "Свэговый амулет",
+    "slot": "trinket",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "swag": 5,
+      "crit": 10
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 1
+  },
+  {
+    "id": "trinket_2_0",
+    "name": "Ржавый перстень",
+    "slot": "trinket",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "swag": 1,
+      "crit": 2
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 2
+  },
+  {
+    "id": "trinket_2_1",
+    "name": "Обычный перстень",
+    "slot": "trinket",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "swag": 2,
+      "crit": 4
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 2
+  },
+  {
+    "id": "trinket_2_2",
+    "name": "Крепкий перстень",
+    "slot": "trinket",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "swag": 2,
+      "crit": 6
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 2
+  },
+  {
+    "id": "trinket_2_3",
+    "name": "Кринжовый перстень",
+    "slot": "trinket",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "swag": 3,
+      "crit": 8
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 2
+  },
+  {
+    "id": "trinket_2_4",
+    "name": "Свэговый перстень",
+    "slot": "trinket",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "swag": 5,
+      "crit": 10
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 2
+  },
+  {
+    "id": "trinket_3_0",
+    "name": "Ржавый тотем",
+    "slot": "trinket",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "swag": 1,
+      "crit": 2
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 3
+  },
+  {
+    "id": "trinket_3_1",
+    "name": "Обычный тотем",
+    "slot": "trinket",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "swag": 2,
+      "crit": 4
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 3
+  },
+  {
+    "id": "trinket_3_2",
+    "name": "Крепкий тотем",
+    "slot": "trinket",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "swag": 2,
+      "crit": 6
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 3
+  },
+  {
+    "id": "trinket_3_3",
+    "name": "Кринжовый тотем",
+    "slot": "trinket",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "swag": 3,
+      "crit": 8
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 3
+  },
+  {
+    "id": "trinket_3_4",
+    "name": "Свэговый тотем",
+    "slot": "trinket",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "swag": 5,
+      "crit": 10
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 3
+  },
+  {
+    "id": "trinket_4_0",
+    "name": "Ржавый кулон свэга",
+    "slot": "trinket",
+    "tier": 0,
+    "color": "rust",
+    "buffs": {
+      "swag": 1,
+      "crit": 2
+    },
+    "buy": 10,
+    "sell": 2,
+    "base": 4
+  },
+  {
+    "id": "trinket_4_1",
+    "name": "Обычный кулон свэга",
+    "slot": "trinket",
+    "tier": 1,
+    "color": "iron",
+    "buffs": {
+      "swag": 2,
+      "crit": 4
+    },
+    "buy": 28,
+    "sell": 7,
+    "base": 4
+  },
+  {
+    "id": "trinket_4_2",
+    "name": "Крепкий кулон свэга",
+    "slot": "trinket",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "swag": 2,
+      "crit": 6
+    },
+    "buy": 60,
+    "sell": 15,
+    "base": 4
+  },
+  {
+    "id": "trinket_4_3",
+    "name": "Кринжовый кулон свэга",
+    "slot": "trinket",
+    "tier": 3,
+    "color": "acid",
+    "buffs": {
+      "swag": 3,
+      "crit": 8
+    },
+    "buy": 130,
+    "sell": 32,
+    "base": 4
+  },
+  {
+    "id": "trinket_4_4",
+    "name": "Свэговый кулон свэга",
+    "slot": "trinket",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {
+      "swag": 5,
+      "crit": 10
+    },
+    "buy": 300,
+    "sell": 75,
+    "base": 4
+  }
+]
