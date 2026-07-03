@@ -19,6 +19,7 @@ var visible_options: Array = []   # options_data после фильтра req_f
 var used_once: Dictionary = {}    # опции с "once": true — раз за визит (анти-фарм)
 var quest_actions: Array = []
 var answers: Array = []
+var current_choice: Dictionary = {}   # активная choice-опция (для one-time once_flag)
 var _full := ""
 var _reveal := 0.0
 
@@ -118,6 +119,10 @@ func _rebuild_options() -> void:
             continue
         if opt.has("req_not_flag") and player.flags.get(opt["req_not_flag"], false):
             continue
+        if opt.has("req_level") and player.level < int(opt["req_level"]):
+            continue          # кнопка открывается по прокачке
+        if opt.has("once_flag") and player.flags.get(opt["once_flag"], false):
+            continue          # реплика с выбором одноразовая (навсегда)
         if opt.get("once", false) and used_once.has(opt.get("label", "")):
             continue          # сыграно в этот визит — спама по ENTER не будет
         visible_options.append(opt)
@@ -165,6 +170,7 @@ func _on_opt(i: int) -> void:
             _speak(_do_learn(opt))
         "choice":
             mode = "choice"
+            current_choice = opt
             answers = opt["answers"]
             var texts: Array = []
             for a in answers:
@@ -237,6 +243,23 @@ func _apply_answer(ans: Dictionary) -> void:
     elif money > 0:
         player.burmolda += money
         lines.append("  (+%d бурмолды 💰)" % money)
+    # эффекты покруче (у «дальних»/странных персонажей выбор весомее)
+    var sw := int(ans.get("swag", 0))
+    if sw != 0:
+        player.swag = max(0, player.swag + sw)
+        lines.append("  (свэг %s%d)" % ["+" if sw > 0 else "", sw])
+    var mhp := int(ans.get("maxhp", 0))
+    if mhp != 0:
+        player.max_hp += mhp
+        player.hp += mhp
+        lines.append("  (макс. HP +%d ♥)" % mhp)
+    if ans.has("item"):
+        player.add_item(ans["item"])
+        lines.append("  🎁 Получено: %s" % ans["item"])
+    if ans.has("set_flag"):                 # ответ может открыть следующую реплику
+        player.flags[ans["set_flag"]] = true
+    if current_choice.has("once_flag"):     # реплика с выбором — одноразовая навсегда
+        player.flags[current_choice["once_flag"]] = true
     _speak(lines)
 
 

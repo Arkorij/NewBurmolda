@@ -19,6 +19,7 @@ var hud: Label
 var overlay: CanvasLayer
 var mobs: Array = []             # видимые ходячие мобы: [{pos: Vector2i, enemy: [...]}]
 var wanderers: Array = []        # блуждающие NPC: [{pos: Vector2i, kind: String}]
+var _reach: Dictionary = {}      # достижимые от игрока клетки (BFS) — спавн только сюда
 var fish: Array = []             # анимированные рыбы в воде: [{pos, off, spd}]
 # у кого из «базовых» может отираться Зомби (спавн 5%)
 const ZOMBIE_SPOTS := ["base", "forest", "meadow", "mire", "pond"]
@@ -68,9 +69,10 @@ func load_location(id: String, from_id := "") -> void:
     _loc_seed = hash(id)
     _slide_left = 0
     ppos = _spawn_pos(from_id)
+    mobs = []
+    _spawn_wanderers()       # первыми — чтобы мобы учли их как препятствия
     _spawn_mobs()
     _spawn_fish()
-    _spawn_wanderers()
     _update_camera()
     _update_hud()
     queue_redraw()
@@ -80,7 +82,9 @@ func _spawn_wanderers() -> void:
     ## Блуждающие NPC. Тепличная: гарантированно встречает новичка на базе,
     ## дальше — 2% шанс в ЛЮБОЙ надмирной локации (в подземелье не ходит).
     ## Зомби: 5% шанс, только в локациях базовых персонажей.
+    ## Спавн только в достижимую от игрока зону — Тепличную/Зомби всегда можно дойти.
     wanderers = []
+    _reach = _reachable({})
     var first_meet: bool = loc_id == "base" \
             and not GameState.player.flags.get("met_teplichnaya", false)
     if first_meet or randf() < 0.02:
@@ -173,7 +177,10 @@ func _unhandled_input(event: InputEvent) -> void:
         _flash("💾 сохранено")
     elif event is InputEventKey and event.pressed and event.keycode == KEY_F1:
         # секретная клавиша: читы работают всегда, но HUD о них не рассказывает
-        _open_cheats()
+        OverworldDebug.open_cheats(self)
+    elif event is InputEventKey and event.pressed and event.keycode == KEY_F2:
+        # секретная клавиша: дебаг-меню вызова любого боя
+        OverworldDebug.open_debug_battles(self)
 
 
 func _process(delta: float) -> void:
@@ -314,6 +321,7 @@ func _spawn_fish() -> void:
 # ─────────────── видимые мобы ───────────────
 func _spawn_mobs() -> void:
     mobs = []
+    _reach = _reachable(_wanderer_block())   # достижимо С УЧЁТОМ бродяг-препятствий
     var monsters: Array = loc.get("monsters", [])
     var danger := int(loc.get("danger", 0))
     if danger <= 0 or monsters.is_empty():
@@ -338,6 +346,8 @@ func _mob_can_stand(t: Vector2i) -> bool:
     var ch := _char_at(t.x, t.y)
     if not (ch in WALK):              # мобы — только по земле/траве (не ноды/порталы)
         return false
+    if not _reach.is_empty() and not _reach.has(t):
+        return false                  # только клетки, достижимые от игрока
     if loc.get("npcs", {}).has(ch) or loc.get("exits", {}).has(ch):
         return false
     for w in wanderers:               # не топтаться по Тепличной/Зомби
@@ -347,6 +357,29 @@ func _mob_can_stand(t: Vector2i) -> bool:
         if m.pos == t:
             return false
     return true
+
+
+func _reachable(blocked: Dictionary) -> Dictionary:
+    ## BFS достижимых от игрока (ppos) проходимых клеток, минуя blocked.
+    var vis: Dictionary = {ppos: true}
+    var q: Array = [ppos]
+    while not q.is_empty():
+        var p: Vector2i = q.pop_front()
+        for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+            var n: Vector2i = p + d
+            if vis.has(n) or blocked.has(n):
+                continue
+            if _walkable(_char_at(n.x, n.y)):
+                vis[n] = true
+                q.append(n)
+    return vis
+
+
+func _wanderer_block() -> Dictionary:
+    var b: Dictionary = {}
+    for w in wanderers:
+        b[w.pos] = true
+    return b
 
 
 func _step_mobs() -> void:
@@ -511,106 +544,9 @@ func _profile_flash() -> void:
         p.pname, p.rank(), p.level, p.swag, p.cringe, p.reputation])
 
 
-# ─────────────── чит-меню (F1, для дебага) ───────────────
-func _open_cheats() -> void:
-    busy = true
-    var panel := _cheat_panel("🐸 ЧИТ-МЕНЮ (дебаг)")
-    var m := SoulMenu.new()
-    m.position = Vector2(70, 96)
-    m.line_h = 22
-    panel.add_child(m)
-    m.setup(["+1 уровень", "+5 уровней", "+1000 бурмолды", "Полный хил",
-             "Легендарный сет (надеть)", "Выучить все приёмы",
-             "Все кольца т5 в сумку", "Убить мобов на карте",
-             "Телепорт в локацию →", "Закрыть"])
-    m.chosen.connect(_on_cheat.bind(panel))
-    m.cancelled.connect(_close_overlay.bind(panel))
-    overlay.add_child(panel)
-
-
-func _cheat_panel(title_text: String) -> Control:
-    var panel := Control.new()
-    panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-    var dim := ColorRect.new()
-    dim.color = Color(0, 0, 0, 0.8)
-    dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-    panel.add_child(dim)
-    var title := Label.new()
-    title.text = title_text
-    title.position = Vector2(70, 52)
-    title.add_theme_font_size_override("font_size", 20)
-    title.add_theme_color_override("font_color", Color("#7CFC5A"))
-    panel.add_child(title)
-    return panel
-
-
-func _on_cheat(i: int, panel: Node) -> void:
-    var p := GameState.player
-    match i:
-        0:
-            p.add_cringe(p.next_level_cringe())
-            _cheat_done(panel, "⬆ уровень %d" % p.level)
-        1:
-            for _k in range(5):
-                p.add_cringe(p.next_level_cringe())
-            _cheat_done(panel, "⬆ уровень %d" % p.level)
-        2:
-            p.burmolda += 1000
-            _cheat_done(panel, "💰 +1000 (всего %d)" % p.burmolda)
-        3:
-            p.hp = p.max_hp
-            _cheat_done(panel, "💚 полный хил")
-        4:
-            for id in ["weapon_0_5", "armor_0_4", "shield_0_4", "trinket_0_4",
-                       "ring_power_5", "ring_freeze_5"]:
-                p.add_item(id)
-                Items.equip(p, id)
-            _cheat_done(panel, "⚔ легендарный сет надет")
-        5:
-            for f in ["learn_sigma", "learn_bogatyr", "learn_aria", "learn_crystal"]:
-                p.flags[f] = true
-            _cheat_done(panel, "✦ все приёмы выучены")
-        6:
-            for eff in ["lifesteal", "power", "crit", "poison", "freeze", "thorns"]:
-                p.add_item("ring_%s_5" % eff)
-            _cheat_done(panel, "💍 6 колец т5 в сумке")
-        7:
-            mobs = []
-            _cheat_done(panel, "💀 мобы зачищены")
-        8:
-            _open_teleport(panel)
-        9:
-            _close_overlay(panel)
-
-
-func _cheat_done(panel: Node, msg: String) -> void:
-    panel.queue_free()
-    _flash_close("✔ ЧИТ: " + msg)
-    queue_redraw()
-
-
-func _open_teleport(old_panel: Node) -> void:
-    old_panel.queue_free()
-    var panel := _cheat_panel("🌀 ТЕЛЕПОРТ (гейт уровня игнорируется)")
-    var m := SoulMenu.new()
-    m.position = Vector2(70, 84)
-    m.line_h = 11
-    m.font_size = 10
-    panel.add_child(m)
-    var ids: Array = DataDB.loc_index.get("order", [])
-    var labels: Array = []
-    for id in ids:
-        var L: Dictionary = DataDB.locations[id]
-        labels.append("%s  (ур.%d, опасн.%d)" % [L.get("name", id),
-                      int(L.get("min_level", 1)), int(L.get("danger", 0))])
-    m.setup(labels)
-    m.chosen.connect(func(i: int):
-        panel.queue_free()
-        busy = false
-        load_location(ids[i])
-        _flash("✔ ЧИТ: телепорт → %s" % DataDB.locations[ids[i]].get("name", "")))
-    m.cancelled.connect(_close_overlay.bind(panel))
-    overlay.add_child(panel)
+# ─────────────── чит-меню (F1) и дебаг-бой (F2) ───────────────
+# Вынесены в scripts/scenes/overworld_debug.gd (OverworldDebug) — F1/F2 это
+# самодостаточный отладочный инструмент, не часть основного цикла надмира.
 
 
 func _close_npc(node: Node) -> void:
@@ -743,6 +679,12 @@ func _draw() -> void:
                         Color("#f0e8a0", 0.14 + 0.10 * glow))
             draw_circle(wr.get_center() + Vector2(0, -3), 6.5 + glow * 1.5,
                         Color("#fff8c8", 0.22 + 0.14 * glow))
+        elif w.kind == "zombie":          # зомби — такой же ореол, но тухло-зелёный
+            var zg := 0.5 + 0.5 * sin(_anim_t * 2.0)
+            draw_circle(wr.get_center() + Vector2(0, -3), 11.0 + zg * 3.0,
+                        Color("#8ab04a", 0.13 + 0.09 * zg))
+            draw_circle(wr.get_center() + Vector2(0, -3), 6.5 + zg * 1.5,
+                        Color("#b6e07a", 0.20 + 0.13 * zg))
         Sprites.draw_npc(self, wr, w.kind)
     for m in mobs:
         Sprites.draw_mob(self, Rect2(m.pos.x * TILE, m.pos.y * TILE, TILE, TILE), m.enemy[0])
