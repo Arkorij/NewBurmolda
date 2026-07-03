@@ -17,6 +17,7 @@ func _ready() -> void:
     _test_ttk()
     _test_quests()
     _test_balance()
+    _test_bullethell()
     _test_world()
     _test_story1()
     _test_story2()
@@ -251,6 +252,120 @@ func _test_balance() -> void:
     bb2._bullets_step(0.016)
     check(GameState.player.hp < hp0, "обычная пуля в той же точке — бьёт")
     bb2.free()
+
+
+func _test_bullethell() -> void:
+    print("\n-- bullet-hell 2.0 (динамика по промпту) --")
+    var p := Player.new("Улётный")
+    var bs = load("res://scenes/Battle.tscn").instantiate()
+    bs.boss_key = "kalitin"
+    bs.battle = Battle.new(p, "kalitin")
+    bs.hint_label = Label.new()
+    bs.add_child(bs.hint_label)
+    # новые паттерны заведены
+    check(bs.PATTERN_NAMES.has("gapwall") and bs.PATTERN_NAMES.has("burst")
+          and bs.PATTERN_NAMES.has("gravity"), "новые паттерны: ЗАБОР/ЗАЛПЫ/СИНЯЯ ДУША")
+    # синие/оранжевые пули (правило Undertale)
+    check(bs._beh_blocks("still", 0.0) and not bs._beh_blocks("still", 100.0),
+          "🔵 синяя пуля не бьёт стоящего")
+    check(bs._beh_blocks("move", 100.0) and not bs._beh_blocks("move", 0.0),
+          "🟠 оранжевая пуля не бьёт движущегося")
+    check(not bs._beh_blocks("", 0.0) and not bs._beh_blocks("", 100.0),
+          "обычная пуля бьёт всегда")
+    # открытие боя босса — по срежиссированному сценарию (BOSS_OPENING)
+    bs.turn_no = 1
+    bs._seg_i = 0
+    bs._reshuffle(false)
+    check(bs.active.size() == 1 and bs.active[0].pat == "walls",
+          "открытие Калитина — по сценарию (КОСТИ)")
+    # после сценария: этап 0 — одиночные паттерны (без комбо)
+    bs._seg_i = 99
+    var intro_ok := true
+    for _i in range(12):
+        bs._reshuffle(false)
+        intro_ok = intro_ok and bs.active.size() == 1
+    check(intro_ok, "вне сценария в интро — по одному паттерну (этап 0)")
+    # драматургия: этапы боя ускоряют снаряды
+    var v0: float = bs._speed_mult()
+    bs.battle.phase2 = true
+    bs.turn_no = 9
+    check(bs._stage() == 3 and bs._speed_mult() > v0,
+          "финал босса быстрее интро (%.2f → %.2f)" % [v0, bs._speed_mult()])
+    # СИНЯЯ ДУША — эксклюзивный режим, не комбинируется с другими паттернами
+    var grav_ok := true
+    var grav_seen := false
+    for _i in range(40):
+        bs._reshuffle(false)
+        if bs._has_pat("gravity"):
+            grav_seen = true
+            grav_ok = grav_ok and bs.active.size() == 1 and bs.soul_mode == "blue"
+    check(grav_seen and grav_ok, "СИНЯЯ ДУША включается и не смешивается")
+    # спавнеры: забор — стена со щелью; залпы «проклёвываются» с телеграфом
+    bs.bullets.clear()
+    bs._spawn_gapwall()
+    check(bs.bullets.size() >= 6 and bs.bullets.size() <= 14,
+          "ЗАБОР — стена со щелью (%d пуль)" % bs.bullets.size())
+    bs.bullets.clear()
+    bs._spawn_burst()
+    var all_wait: bool = bs.bullets.size() >= 14
+    for b in bs.bullets:
+        all_wait = all_wait and float(b.get("wait", 0.0)) > 0.0
+    check(all_wait, "ЗАЛПЫ — мульти-кольца с телеграфом (%d пуль)" % bs.bullets.size())
+    # преследователь доводит и запирает курс (не вечное самонаведение)
+    bs.bullets.clear()
+    bs._spawn_pat({"pat": "homing", "cd": 0.0})
+    check(float(bs.bullets[0].get("steer", 0.0)) > 0.0,
+          "преследователь: довод, потом прямая")
+    # ГАРАНТИЯ ПРОХОДА: КОСТИ и ЗАБОР никогда не активны одновременно
+    var seal_ok := true
+    for _i in range(60):
+        bs._reshuffle(false)
+        seal_ok = seal_ok and not (bs._has_pat("walls") and bs._has_pat("gapwall"))
+    check(seal_ok, "две «стены» не запечатывают проход (не комбинируются)")
+    # проход новой стены костей — рядом с прошлым (путь не рвётся)
+    bs.bullets.clear()
+    bs._last_gap_y = -1.0
+    bs._spawn_bone_wall()
+    var g1: float = bs._last_gap_y
+    bs._spawn_bone_wall()
+    check(absf(bs._last_gap_y - g1) <= 55.5,
+          "проходы соседних стен достижимы (сдвиг ≤55 пкс)")
+    # щель ЗАБОРА дрейфует ограниченно, без телепортов
+    bs._gap_x = -1.0
+    bs._bh_t = 0.0
+    bs._spawn_gapwall()
+    var gx1: float = bs._gap_x
+    bs._bh_t = 1.0
+    bs._spawn_gapwall()
+    check(absf(bs._gap_x - gx1) <= 58.5, "щель ЗАБОРА без телепортов (сдвиг ≤58 пкс)")
+    # телеграфы поджимаются к финалу босса, но не исчезают
+    check(bs._warn_mult() < 1.0 and bs._warn_mult() >= 0.7,
+          "телеграфы в финале короче, но читаемы (×%.2f)" % bs._warn_mult())
+    bs.free()
+    # ДИНАМИЧЕСКИЙ хитбокс: плотный шквал сжимает сердце
+    GameState.new_game("Хитбокс")
+    var bh = load("res://scenes/Battle.tscn").instantiate()
+    bh.enemy = ["Тест", 30, 5]
+    add_child(bh)
+    bh._begin_bullets()
+    bh.active = []
+    bh._seg_t = 99.0
+    bh._spike_done = true
+    var r0: float = bh._hit_r
+    for _i in range(60):
+        bh.bullets.append({"kind": "ball", "cls": 1, "safe": false,
+            "pos": bh.box.position, "vel": Vector2.ZERO})
+    for _i in range(30):
+        bh._bullets_step(0.033)
+    check(bh._hit_r < r0 - 0.8 and bh._hit_r >= bh.HIT_R_MIN,
+          "плотный шквал сжимает хитбокс (%.1f → %.1f)" % [r0, bh._hit_r])
+    bh.free()
+    # разрыв сложности: у мобов снаряды медленнее, чем у босса в любом этапе
+    var ms = load("res://scenes/Battle.tscn").instantiate()
+    ms.battle = Battle.new(p, null, ["Комар", 10, 2], 2)
+    check(ms._stage() == -1 and ms._speed_mult() < 1.0,
+          "мобы прощают: снаряды медленнее (×%.2f)" % ms._speed_mult())
+    ms.free()
 
 
 func _test_world() -> void:
