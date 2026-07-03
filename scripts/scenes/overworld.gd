@@ -172,14 +172,8 @@ func _unhandled_input(event: InputEvent) -> void:
         GameState.save_game()
         _flash("💾 сохранено")
     elif event is InputEventKey and event.pressed and event.keycode == KEY_F1:
-        if _cheats_on():
-            _open_cheats()
-
-
-func _cheats_on() -> bool:
-    ## Чит-меню только для разработки: запуск с аргументом --cheats
-    ## (godot --path . -- --cheats). В обычной игре F1 молчит.
-    return "--cheats" in OS.get_cmdline_user_args()
+        # секретная клавиша: читы работают всегда, но HUD о них не рассказывает
+        _open_cheats()
 
 
 func _process(delta: float) -> void:
@@ -664,9 +658,8 @@ func _flash(msg: String) -> void:
 
 func _update_hud() -> void:
     var p := GameState.player
-    var cheat_hint := " · F1 читы" if _cheats_on() else ""
-    hud.text = "%s   ♥ %d/%d   ⛃ %d   ур.%d\nWASD/стрелки — ходить · моб = бой · буква = NPC · ENTER меню%s" % [
-        loc.get("name", "?"), p.hp, p.max_hp, p.burmolda, p.level, cheat_hint]
+    hud.text = "%s   ♥ %d/%d   ⛃ %d   ур.%d\nWASD/стрелки — ходить · моб = бой · буква = NPC · ENTER меню" % [
+        loc.get("name", "?"), p.hp, p.max_hp, p.burmolda, p.level]
 
 
 # ─────────────── отрисовка ───────────────

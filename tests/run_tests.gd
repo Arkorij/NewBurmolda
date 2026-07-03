@@ -434,11 +434,12 @@ func _test_report_fixes() -> void:
     ns._rebuild_options()
     check(ns.visible_options.size() == before - 1, "ладушки: раз за визит (опция скрылась)")
     ns.free()
-    # читы выключены без --cheats
+    # читы: F1 работает, но HUD о нём молчит (секретная клавиша)
     var ow2 = load("res://scenes/Overworld.tscn").instantiate()
     add_child(ow2)
     ow2.set_process(false)
-    check(not ow2._cheats_on(), "F1-читы выключены без флага --cheats")
+    ow2.load_location("base")
+    check(not "F1" in ow2.hud.text, "HUD не рекламирует чит-меню")
     ow2.free()
 
 
