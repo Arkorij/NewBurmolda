@@ -50,6 +50,7 @@ var busy := false
 var projectiles: Array = []      # плевки лавовых рыб: {pos: Vector2, vel: Vector2}
 var _anim_t := 0.0
 var _move_cd := 0.0
+var _lava_cd := 0.0              # неуязвимость между ожогами лавы (i-frame)
 var info: Label
 var lore_lbl: Label
 var overlay: CanvasLayer
@@ -267,6 +268,7 @@ func _process(delta: float) -> void:
         return
     _anim_t += delta
     _move_cd -= delta
+    _lava_cd = maxf(0.0, _lava_cd - delta)
     if _move_cd <= 0.0:
         var dx := int(Input.get_axis("ui_left", "ui_right"))
         var dy := int(Input.get_axis("ui_up", "ui_down"))
@@ -318,15 +320,17 @@ func _try_move(dx: int, dy: int) -> void:
     for c in st.chests:
         if not c.opened and c.pos == ppos:
             _open_chest(c)
-    # лава жжёт, если прошёл ВПЛОТНУЮ
+    # лава жжёт, если прошёл ВПЛОТНУЮ (с неуязвимостью между ожогами)
     for d4 in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
-        if _cell(ppos + d4) == "L":
+        if _cell(ppos + d4) == "L" and _lava_cd <= 0.0:
+            _lava_cd = 0.6
             var dmg := 2 + int(depth / 4.0)
             GameState.player.damage(dmg)
             Sfx.play("hurt")
             _flash("🔥 Жар лавы: -%d HP!" % dmg)
             if not GameState.player.is_alive():
                 GameState.player.hp = 1
+                GameState.player.flags["_hell_spit"] = true
                 closed.emit()
                 return
             break
@@ -356,6 +360,7 @@ func _fish_step(delta: float) -> void:
             _flash("💥 Лавовый плевок: -%d HP!" % dmg)
             if not GameState.player.is_alive():
                 GameState.player.hp = 1
+                GameState.player.flags["_hell_spit"] = true
                 closed.emit()
                 return
             continue
@@ -377,6 +382,7 @@ func _after_fight(result: String, node: Node, m: Dictionary) -> void:
     node.queue_free()
     busy = false
     if result == "lose":
+        GameState.player.flags["_hell_spit"] = true
         closed.emit()
         return
     if result == "win":
@@ -419,6 +425,9 @@ func _open_chest(c: Dictionary) -> void:
     if randf() < 0.3:
         p.add_item("зольный слиток")
         lines.append("🎒 добыто: зольный слиток")
+    if randf() < 0.07:      # редчайший дроп — планка ОЗУ (квест Зава Воздуха)
+        p.add_item("ОЗУ")
+        lines.append("💾 РЕДЧАЙШЕЕ: планка ОЗУ! (Зав Воздуха отдаст за неё что угодно)")
     lore_lbl.text = "📦 " + " · ".join(lines)
 
 

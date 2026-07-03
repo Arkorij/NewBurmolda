@@ -232,5 +232,20 @@
     "buy": 910,
     "sell": 227,
     "base": 0
+  },
+  {
+    "id": "ring_calm_q",
+    "name": "Кольцо Невозмутимости",
+    "slot": "ring",
+    "tier": 4,
+    "color": "gold",
+    "buffs": {},
+    "effect": "calm",
+    "mag": 18,
+    "buy": 600,
+    "sell": 150,
+    "base": 0,
+    "no_sell": true,
+    "quest_only": true
   }
 ]

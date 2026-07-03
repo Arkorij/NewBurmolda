@@ -68,7 +68,10 @@ static func equip(player: Player, id) -> Array:
         elif eq.get("ring2") == null:
             slot = "ring2"
         else:
-            slot = "ring1"
+            # оба заняты — заменяем БОЛЕЕ СЛАБОЕ (меньший тир), а не молча первое
+            var t1 := int(get_item(eq["ring1"]).get("tier", 0))
+            var t2 := int(get_item(eq["ring2"]).get("tier", 0))
+            slot = "ring1" if t1 <= t2 else "ring2"
     var old = eq[slot]
     player.remove_item(id)
     if old != null:
@@ -109,6 +112,8 @@ static func buffs_str(id) -> String:
 static func random_item(max_tier := 5, slot = null) -> Variant:
     var pool: Array = []
     for it in DataDB.items.values():
+        if it.get("quest_only", false):       # квестовые уникумы не падают лутом
+            continue
         if int(it["tier"]) <= max_tier and (slot == null or it["slot"] == slot):
             pool.append(it["id"])
     if pool.is_empty():

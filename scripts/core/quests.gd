@@ -7,6 +7,7 @@ const GIVER_NAMES := {
     "yampol": "Ямполь", "shest": "Шестухины", "tusha": "Туши", "popov": "Попова",
     "yampol_jr": "Ямполь Мл.", "vozduhan": "Воздухана", "dima": "Димы",
     "ded": "Деда", "baba": "Бабы", "fish_npc": "Рыбы",
+    "teplichnaya": "Тепличной (если найдёшь)",
 }
 
 
@@ -109,7 +110,9 @@ static func turn_in(player: Player, qid: String) -> Array:
         msgs.append("+%d репутации 🤝" % int(rw["rep"]))
     if rw.get("item"):
         player.add_item(rw["item"])
-        msgs.append("🎁 Предмет: %s" % rw["item"])
+        # если награда — id снаряжения, показываем человеческое имя
+        var it = DataDB.items.get(rw["item"])
+        msgs.append("🎁 Предмет: %s" % (it["name"] if it != null else rw["item"]))
     return msgs
 
 
@@ -128,8 +131,12 @@ static func progress_str(player: Player, qid: String) -> String:
 
 static func main_goal(player: Player) -> String:
     var f: Dictionary = player.flags
-    if f.get("kalitin_defeated") or f.get("boss_defeated"):
+    # «пройдена» только когда повержены ОБА сюжетных босса — если игрок
+    # ухитрился завалить Калитина раньше Цизи, цель честно отправляет назад
+    if (f.get("kalitin_defeated") or f.get("boss_defeated")) and f.get("tsizi_defeated"):
         return "★ Игра пройдена! Ты — Верховная Бурмолда болота."
+    if f.get("kalitin_defeated") and not f.get("tsizi_defeated"):
+        return "Калитин пал... но дух Цизи всё ещё дует. Заверши начатое (буква Z)."
     if not f.get("tsizi_defeated"):
         if player.level < 3:
             return "Цель: прокачайся (добывай, бей мобов) и одолей Духа Цизи."

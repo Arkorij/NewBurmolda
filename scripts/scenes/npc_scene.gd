@@ -15,6 +15,8 @@ var pcolor: Color
 
 var mode := "options"          # "options" | "choice"
 var options_data: Array = []
+var visible_options: Array = []   # options_data после фильтра req_flag/req_not_flag
+var used_once: Dictionary = {}    # опции с "once": true — раз за визит (анти-фарм)
 var quest_actions: Array = []
 var answers: Array = []
 var _full := ""
@@ -109,7 +111,16 @@ func _rebuild_options() -> void:
     for qid in Quests.givable(player, kind):
         quest_actions.append({"kind": "quest_take", "qid": qid})
         labels.append("📜 Взять: %s" % DataDB.quests[qid]["name"])
+    # фильтр опций по флагам (req_flag должен стоять, req_not_flag — нет)
+    visible_options = []
     for opt in options_data:
+        if opt.has("req_flag") and not player.flags.get(opt["req_flag"], false):
+            continue
+        if opt.has("req_not_flag") and player.flags.get(opt["req_not_flag"], false):
+            continue
+        if opt.get("once", false) and used_once.has(opt.get("label", "")):
+            continue          # сыграно в этот визит — спама по ENTER не будет
+        visible_options.append(opt)
         labels.append(opt.get("label", "..."))
     menu.setup(labels)
 
@@ -128,7 +139,7 @@ func _on_opt(i: int) -> void:
             _speak(Quests.turn_in(player, qa["qid"]))
         _rebuild_options()
         return
-    var opt: Dictionary = options_data[i - quest_actions.size()]
+    var opt: Dictionary = visible_options[i - quest_actions.size()]
     match opt.get("kind", ""):
         "leave":
             closed.emit()
@@ -141,9 +152,14 @@ func _on_opt(i: int) -> void:
         "buy":
             _speak(NPCEffects.buy(player, int(opt["cost"]), opt["effect"], opt.get("arg")))
         "custom":
+            if opt.get("once", false):
+                used_once[opt.get("label", "")] = true
             _speak(NPCEffects.apply(player, opt["effect"], opt.get("arg")))
+            _rebuild_options()      # флаги могли открыть/закрыть опции
+        "fetch":
+            _speak(_do_fetch(opt))
         "sell":
-            var res := Econ.sell_all(player)
+            var res := Econ.sell_all(player, float(opt.get("premium", 1.0)))
             _speak(res[2])
         "learn":
             _speak(_do_learn(opt))
@@ -162,6 +178,33 @@ func _on_cancel() -> void:
         _rebuild_options()
     else:
         closed.emit()
+
+
+func _do_fetch(opt: Dictionary) -> Array:
+    ## «Принеси предметы»: проверяем наличие, забираем, платим.
+    var need: Dictionary = opt.get("items", {})
+    for item in need:
+        if int(player.inventory.get(item, 0)) < int(need[item]):
+            return ["«Нету у тебя. Ни округлого, ни продолговатого. Пздц.»",
+                    "(нужно: %s)" % ", ".join(need.keys())]
+    for item in need:
+        player.remove_item(item, int(need[item]))
+    var lines: Array = [opt.get("line", "«Уважил».")]
+    var money := int(opt.get("money", 0))
+    if money > 0:
+        player.burmolda += money
+        lines.append("  (+%d бурмолды 💰)" % money)
+    var cr := int(opt.get("cringe", 0))
+    if cr > 0:
+        player.add_cringe(cr)
+        lines.append("  (+%d кринж)" % cr)
+    if opt.has("give_item"):
+        player.add_item(opt["give_item"])
+        lines.append("  🎁 Получено: %s" % opt["give_item"])
+    if opt.has("set_flag"):
+        player.flags[opt["set_flag"]] = true
+        _rebuild_options()      # флаг мог открыть/закрыть опции
+    return lines
 
 
 func _do_learn(opt: Dictionary) -> Array:

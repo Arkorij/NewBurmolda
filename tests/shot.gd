@@ -77,6 +77,14 @@ func _ready() -> void:
     var np = load("res://scenes/NPC.tscn").instantiate(); np.kind = "yampol"; add_child(np)
     await _wait(); await _save("06_npc"); np.free()
 
+    for wk in ["teplichnaya", "zombie"]:
+        var wn = load("res://scenes/NPC.tscn").instantiate()
+        wn.kind = wk
+        add_child(wn)
+        await _wait()
+        await _save("06_npc_" + wk)
+        wn.free()
+
     var inv = load("res://scenes/Inventory.tscn").instantiate(); add_child(inv)
     await _wait(); await _save("07_inventory"); inv.free()
 

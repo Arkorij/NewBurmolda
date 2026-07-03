@@ -99,8 +99,10 @@ func _sell_list() -> void:
     cur_list = []
     var labels: Array = []
     for pair in Items.owned_gear(player):
-        cur_list.append(pair[0])
         var it = Items.get_item(pair[0])
+        if it.get("no_sell", false):     # квестовые вещи кузнец не берёт
+            continue
+        cur_list.append(pair[0])
         labels.append("%s — за %d ⛃" % [it["name"], int(it["sell"])])
     if cur_list.is_empty():
         labels.append("(нечего продавать)")

@@ -25,8 +25,8 @@ static func total_value(player: Player) -> int:
     return t
 
 
-static func sell_all(player: Player) -> Array:
-    ## -> [total, count, lines]
+static func sell_all(player: Player, premium := 1.0) -> Array:
+    ## -> [total, count, lines]. premium — множитель цены (щедрые скупщики).
     var items := resource_items(player)
     if items.is_empty():
         return [0, 0, ["Нет ресурсов на продажу. Иди добудь чего-нибудь."]]
@@ -36,7 +36,7 @@ static func sell_all(player: Player) -> Array:
     for pair in items:
         var it = pair[0]
         var q := int(pair[1])
-        var val := price(it) * q
+        var val := int(price(it) * q * premium)
         total += val
         count += q
         player.remove_item(it, q)

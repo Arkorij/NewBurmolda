@@ -36,6 +36,8 @@ static func _roll_gear(min_tier: int, max_tier: int) -> Variant:
     ## Случайный предмет в коридоре тиров — в харде мусор не сыпется.
     var pool: Array = []
     for it in DataDB.items.values():
+        if it.get("quest_only", false):       # квестовые уникумы не падают лутом
+            continue
         if int(it["tier"]) >= min_tier and int(it["tier"]) <= max_tier:
             pool.append(it["id"])
     if pool.is_empty():

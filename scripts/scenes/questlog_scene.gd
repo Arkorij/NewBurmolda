@@ -20,6 +20,19 @@ func _ready() -> void:
             var qq: Dictionary = DataDB.quests[qid]
             lines.append("• %s  —  %s" % [qq["name"], Quests.progress_str(p, qid)])
             lines.append("    %s" % qq["desc"])
+    # задание Зава Воздуха (флаговое): найти ОЗУ
+    if p.flags.get("popov_ozu_taken", false):
+        if p.flags.get("popov_ozu_done", false):
+            lines.append("• Найди ОЗУ — ✔ сдано (Зав теперь скупает по-царски)")
+        else:
+            lines.append("• Найди ОЗУ — планка в сундуках Адской Шахты (редкость!)")
+    # задание Воздухана живёт на флагах (не в системе квестов) — показать
+    if p.flags.get("vozduhan_quest_taken", false):
+        if p.flags.get("vozduhan_quest_done", false):
+            lines.append("• Задание Воздухана — ✔ «выполнено» (мы-то знаем)")
+        else:
+            lines.append("• Задание Воздухана — поймать эхо, взвесить туман, полрадуги")
+            lines.append("    (говорят, сдаётся как-то хитро...)")
     var body := _lbl("\n".join(PackedStringArray(lines)), 15, Vector2(24, 70), 592,
                      HORIZONTAL_ALIGNMENT_LEFT, Color("#dfe7ef"))
     body.size = Vector2(592, 360)

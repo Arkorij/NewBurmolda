@@ -9,4 +9,10 @@ func _ready() -> void:
     if "--shot" in OS.get_cmdline_user_args():
         get_tree().call_deferred("change_scene_to_file", "res://tests/Shot.tscn")
         return
+    if "--audit" in OS.get_cmdline_user_args():
+        get_tree().call_deferred("change_scene_to_file", "res://tests/Audit.tscn")
+        return
+    if "--play" in OS.get_cmdline_user_args():
+        get_tree().call_deferred("change_scene_to_file", "res://tests/Play.tscn")
+        return
     get_tree().call_deferred("change_scene_to_file", "res://scenes/Title.tscn")

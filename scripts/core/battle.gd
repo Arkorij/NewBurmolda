@@ -20,7 +20,9 @@ var eq: Dictionary              # баффы надетой экипировки
 var effects: Dictionary         # эффекты колец
 var enemy_poison: int = 0
 var enemy_frozen: bool = false
-var evade_bonus: int = 0        # % уворота от зелий (на этот бой)
+var _freeze_tried: bool = false   # мороз бросается 1 раз за ход (не за удар!)
+var evade_sources: Array = []   # источники уворота от зелий (доли, на этот бой)
+var potion_uses: Dictionary = {}  # зелье/роса -> сколько раз пили В ЭТОМ бою
 var phase2: bool = false        # босс перешёл во 2-ю фазу (злой)
 var finished: bool = false
 var won                         # null / true / false
@@ -79,8 +81,25 @@ func crit_chance() -> float:
 
 
 func evade_chance() -> int:
-    ## Шанс (%) что пуля пройдёт сквозь без урона: Блок% со щита/оберега + зелья.
-    return clampi(int(eq.get("block", 0)) + evade_bonus, 0, 75)
+    ## Шанс (%) что пуля пройдёт сквозь. Источники (Блок%, кольцо «calm»,
+    ## каждое зелье) складываются МУЛЬТИПЛИКАТИВНО, как уклонение в Доте:
+    ## total = 1 - Π(1 - s). Плюс жёсткий потолок 60%.
+    var miss := 1.0
+    var block := int(eq.get("block", 0))
+    if block > 0:
+        miss *= 1.0 - block / 100.0
+    var calm := int(effects.get("calm", 0))
+    if calm > 0:
+        miss *= 1.0 - calm / 100.0
+    for s in evade_sources:
+        miss *= 1.0 - float(s)
+    return clampi(int(round((1.0 - miss) * 100.0)), 0, 60)
+
+
+func _potion_mult(key: String) -> float:
+    ## Деградация зелий: каждый повторный приём В ЭТОМ бою слабее (×0.6).
+    ## Новый бой — новый Battle — эффективность восстанавливается сама.
+    return pow(0.6, int(potion_uses.get(key, 0)))
 
 
 # ─────────────── фазы боссов ───────────────
@@ -117,14 +136,21 @@ func _hit(dmg) -> Array:
     if po > 0:
         enemy_poison += po
         extra.append("☠ яд наложен")
+    # мороз: ОДИН бросок за ход игрока (иначе многоударные приёмы дают
+    # почти гарантированную вечную заморозку); после заморозки флаг не
+    # сбрасывается до следующей фазы врага → морозить можно не чаще, чем
+    # через ход — боссы успевают отвечать.
     var fr := int(effects.get("freeze", 0))
-    if fr > 0 and not enemy_frozen and randf() < fr / 100.0:
-        enemy_frozen = true
-        extra.append("❄ ЗАМОРОЗКА — враг пропустит ход!")
+    if fr > 0 and not enemy_frozen and not _freeze_tried:
+        _freeze_tried = true
+        if randf() < fr / 100.0:
+            enemy_frozen = true
+            extra.append("❄ ЗАМОРОЗКА — враг пропустит ход!")
     return [dmg, extra]
 
 
 func poison_tick() -> int:
+    _freeze_tried = false     # враг реально ходит → мороз снова доступен
     if enemy_poison > 0:
         var d := enemy_poison
         enemy_hp -= d
@@ -212,7 +238,7 @@ func heal_options() -> Array:
     if player.has_item("зелье свэга"):
         opts.append(["зелье свэга", "Зелье свэга (+2 свэг, +15 HP)"])
     if player.has_item("зелье уворота"):
-        opts.append(["зелье уворота", "Зелье уворота (+35% шанс пропустить пули, весь бой)"])
+        opts.append(["зелье уворота", "Зелье уворота (+уворот на бой; каждое следующее слабее)"])
     for entry in DataDB.food:
         var nm: String = entry[0]
         if player.has_item(nm):
@@ -222,19 +248,34 @@ func heal_options() -> Array:
 
 
 func use_item(key: String) -> Array:
+    ## Зелья и роса ДЕГРАДИРУЮТ в течение боя (каждый приём слабее);
+    ## еда — конечный ресурс, не деградирует.
     if key == "зелье свэга" and player.remove_item("зелье свэга"):
-        player.swag += 2
-        player.heal(15)
-        return ["Зелье свэга: +2 свэг, +15 HP 🧪"]
+        var m := _potion_mult(key)
+        potion_uses[key] = int(potion_uses.get(key, 0)) + 1
+        var sw: int = max(0, int(round(2.0 * m)))
+        var hl: int = max(1, int(round(15.0 * m)))
+        player.swag += sw
+        player.heal(hl)
+        var tail := "" if m >= 1.0 else " (эффект слабеет)"
+        return ["Зелье свэга: +%d свэг, +%d HP 🧪%s" % [sw, hl, tail]]
     if key == "зелье уворота" and player.remove_item("зелье уворота"):
-        evade_bonus += 35
-        return ["Зелье уворота: тело как туман 🌫 (+35% уворот, итого %d%%)" % evade_chance()]
+        var m2 := _potion_mult(key)
+        potion_uses[key] = int(potion_uses.get(key, 0)) + 1
+        evade_sources.append(0.35 * m2)
+        var tail2 := "" if m2 >= 1.0 else " (туман пожиже)"
+        return ["Зелье уворота: тело как туман 🌫 (итого уворот %d%%)%s" % [evade_chance(), tail2]]
     for entry in DataDB.food:
         if key == entry[0] and player.remove_item(key):
             player.heal(int(entry[1]))
             return ["Ты съел: %s. +%d HP 🍖" % [key, int(entry[1])]]
-    player.heal(8)
-    return ["Глоток росы: +8 HP 💧"]
+    # роса бесплатна — поэтому деградирует жёстче всех
+    var md := _potion_mult("__dew__")
+    potion_uses["__dew__"] = int(potion_uses.get("__dew__", 0)) + 1
+    var heal: int = max(1, int(round(8.0 * md)))
+    player.heal(heal)
+    var tail3 := "" if md >= 1.0 else " (роса выдыхается)"
+    return ["Глоток росы: +%d HP 💧%s" % [heal, tail3]]
 
 
 func flee() -> Array:

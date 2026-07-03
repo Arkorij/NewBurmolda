@@ -18,7 +18,10 @@ var hud_bg: ColorRect
 var hud: Label
 var overlay: CanvasLayer
 var mobs: Array = []             # видимые ходячие мобы: [{pos: Vector2i, enemy: [...]}]
+var wanderers: Array = []        # блуждающие NPC: [{pos: Vector2i, kind: String}]
 var fish: Array = []             # анимированные рыбы в воде: [{pos, off, spd}]
+# у кого из «базовых» может отираться Зомби (спавн 5%)
+const ZOMBIE_SPOTS := ["base", "forest", "meadow", "mire", "pond"]
 var _anim_t := 0.0               # общее время для анимаций (вода/рыбы/порталы)
 var _loc_seed := 0               # сид декораций локации
 var _move_cd := 0.0
@@ -67,9 +70,43 @@ func load_location(id: String, from_id := "") -> void:
     ppos = _spawn_pos(from_id)
     _spawn_mobs()
     _spawn_fish()
+    _spawn_wanderers()
     _update_camera()
     _update_hud()
     queue_redraw()
+
+
+func _spawn_wanderers() -> void:
+    ## Блуждающие NPC. Тепличная: гарантированно встречает новичка на базе,
+    ## дальше — 2% шанс в ЛЮБОЙ надмирной локации (в подземелье не ходит).
+    ## Зомби: 5% шанс, только в локациях базовых персонажей.
+    wanderers = []
+    var first_meet: bool = loc_id == "base" \
+            and not GameState.player.flags.get("met_teplichnaya", false)
+    if first_meet or randf() < 0.02:
+        var t := _wanderer_tile()
+        if t.x >= 0:
+            wanderers.append({"pos": t, "kind": "teplichnaya"})
+    if loc_id in ZOMBIE_SPOTS and randf() < 0.05:
+        var t2 := _wanderer_tile()
+        if t2.x >= 0:
+            wanderers.append({"pos": t2, "kind": "zombie"})
+
+
+func _wanderer_tile() -> Vector2i:
+    ## Клетка для статичного NPC: минимум 3 свободных соседа,
+    ## чтобы он гарантированно не перекрыл узкий проход.
+    for _t in range(40):
+        var t := _random_empty_tile()
+        if t.x < 0:
+            continue
+        var free := 0
+        for d in [Vector2i(1, 0), Vector2i(-1, 0), Vector2i(0, 1), Vector2i(0, -1)]:
+            if _walkable(_char_at(t.x + d.x, t.y + d.y)):
+                free += 1
+        if free >= 3:
+            return t
+    return Vector2i(-1, -1)
 
 
 func _spawn_pos(from_id: String) -> Vector2i:
@@ -135,7 +172,14 @@ func _unhandled_input(event: InputEvent) -> void:
         GameState.save_game()
         _flash("💾 сохранено")
     elif event is InputEventKey and event.pressed and event.keycode == KEY_F1:
-        _open_cheats()
+        if _cheats_on():
+            _open_cheats()
+
+
+func _cheats_on() -> bool:
+    ## Чит-меню только для разработки: запуск с аргументом --cheats
+    ## (godot --path . -- --cheats). В обычной игре F1 молчит.
+    return "--cheats" in OS.get_cmdline_user_args()
 
 
 func _process(delta: float) -> void:
@@ -177,6 +221,10 @@ func _try_move(dx: int, dy: int) -> void:
     if loc.get("exits", {}).has(ch):
         _travel(loc["exits"][ch])
         return
+    for w in wanderers:
+        if w.pos == Vector2i(nx, ny):     # бамп в блуждающего NPC = диалог
+            _open_npc(w.kind)
+            return
     for m in mobs:
         if m.pos == Vector2i(nx, ny):     # войти в моба = начать бой
             _start_map_battle(m)
@@ -298,6 +346,9 @@ func _mob_can_stand(t: Vector2i) -> bool:
         return false
     if loc.get("npcs", {}).has(ch) or loc.get("exits", {}).has(ch):
         return false
+    for w in wanderers:               # не топтаться по Тепличной/Зомби
+        if w.pos == t:
+            return false
     for m in mobs:
         if m.pos == t:
             return false
@@ -590,6 +641,10 @@ func _close_overlay(node: Node) -> void:
     node.queue_free()
     busy = false
     _update_hud()
+    # шахта выкинула героя при смерти — объяснить, что произошло
+    if GameState.player.flags.get("_hell_spit", false):
+        GameState.player.flags.erase("_hell_spit")
+        _flash("🔥 Пекло пожевало тебя и выплюнуло наружу. «тм». (1 HP — подлечись!)")
     queue_redraw()
 
 
@@ -609,8 +664,9 @@ func _flash(msg: String) -> void:
 
 func _update_hud() -> void:
     var p := GameState.player
-    hud.text = "%s   ♥ %d/%d   ⛃ %d   ур.%d\nWASD/стрелки — ходить · моб = бой · буква = NPC · ENTER меню · F1 читы" % [
-        loc.get("name", "?"), p.hp, p.max_hp, p.burmolda, p.level]
+    var cheat_hint := " · F1 читы" if _cheats_on() else ""
+    hud.text = "%s   ♥ %d/%d   ⛃ %d   ур.%d\nWASD/стрелки — ходить · моб = бой · буква = NPC · ENTER меню%s" % [
+        loc.get("name", "?"), p.hp, p.max_hp, p.burmolda, p.level, cheat_hint]
 
 
 # ─────────────── отрисовка ───────────────
@@ -686,6 +742,15 @@ func _draw() -> void:
                      0, TAU, 12, Color("#7ab0e0", 0.5), 1.0)
         elif ph > 3.0 and ph < 3.4:     # изредка мелькает спинка
             draw_circle(base + Vector2(TILE * 0.5, TILE * 0.55), 2.0, Color("#d05a2a", 0.8))
+    for w in wanderers:
+        var wr := Rect2(w.pos.x * TILE, w.pos.y * TILE, TILE, TILE)
+        if w.kind == "teplichnaya":       # светящаяся голова — заметный тёплый ореол
+            var glow := 0.5 + 0.5 * sin(_anim_t * 2.0)
+            draw_circle(wr.get_center() + Vector2(0, -3), 11.0 + glow * 3.0,
+                        Color("#f0e8a0", 0.14 + 0.10 * glow))
+            draw_circle(wr.get_center() + Vector2(0, -3), 6.5 + glow * 1.5,
+                        Color("#fff8c8", 0.22 + 0.14 * glow))
+        Sprites.draw_npc(self, wr, w.kind)
     for m in mobs:
         Sprites.draw_mob(self, Rect2(m.pos.x * TILE, m.pos.y * TILE, TILE, TILE), m.enemy[0])
     Sprites.draw_grid(self, Rect2(ppos.x * TILE, ppos.y * TILE, TILE, TILE), "player")

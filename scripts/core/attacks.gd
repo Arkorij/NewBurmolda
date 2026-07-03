@@ -54,8 +54,9 @@ static func sigma_gaze(b: Battle) -> Array:
 
 
 static func bogatyr(b: Battle) -> Array:
+    # ×1.5 (не ×2): дешёвый приём без оружия не должен догонять легендарный меч
     if randf() < 0.7:
-        var r: Array = b._hit(b.attack_power() * 2 + randi_range(6, 16))
+        var r: Array = b._hit(int(b.attack_power() * 1.5) + randi_range(6, 16))
         return ["💪 БОГАТЫРСКИЙ ЗАМАХ! %d урона" % r[0]] + _fx(r[1])
     return ["Замахнулся так широко, что промазал. 😵"]
 

@@ -81,6 +81,44 @@ static func vozduhan_bet(p: Player) -> Array:
     return ["Каким-то чудом он наврал убедительнее. Проигрыш!"]
 
 
+# ─── квест-обманка Воздухана: сдаётся ТОЛЬКО враньём ───
+static func vozduhan_quest_take(p: Player) -> Array:
+    p.flags["vozduhan_quest_taken"] = true
+    return ["Воздухан надувается от важности:",
+            "«Задание: поймай эхо руками, взвесь туман и принеси мне",
+            "ровно половину радуги. Лично. Это очень просто.» (это невозможно)",
+            "📜 Задание Воздухана взято. Как сдавать — думай сам."]
+
+
+static func vozduhan_truth(p: Player) -> Array:
+    # честность духа лжи не устраивает — даже если ты правда всё сделал
+    return ["«Враньё!» — фыркает Воздухан. — «...Что, правда сделал?",
+            "Тогда ТОЧНО враньё. Правду я за версту чую и не перевариваю.»",
+            "(Похоже, честный ответ тут не работает...)"]
+
+
+static func vozduhan_lie(p: Player) -> Array:
+    p.flags["vozduhan_quest_done"] = true
+    p.add_cringe(25)
+    p.reputation += 2
+    p.burmolda += 20
+    return ["Ты смотришь ему в глаза и нагло врёшь: «Я всё сделал».",
+            "Воздухан замирает... и расплывается в улыбке:",
+            "«ВОТ! Вот это по-нашему! Дух лжи уважает только ложь.»",
+            "🏆 Задание Воздухана зачтено враньём. +20 бурмолды, +25 кринжа, +2 репутации",
+            "«Держи. Это тоже враньё, но блестит.»"]
+
+
+static func popov_ozu_take(p: Player) -> Array:
+    ## Зав Воздуха: квест «Найди ОЗУ» (планка — редкий дроп из сундуков Пекла).
+    p.flags["popov_ozu_taken"] = true
+    return ["Зав Воздуха резко серьёзнеет (впервые за разговор):",
+            "«ОЗУ. Планка оперативной памяти. Настоящая. Их находят",
+            "в сундуках Адской Шахты — Пекло коллекционирует железо.",
+            "Принеси — и антиспам-оберег от епочты твой. И не только он.»",
+            "📜 Задание взято: найти ОЗУ (сундуки Адской Шахты, большая редкость)"]
+
+
 # ─── диспетчер по effect-ID ───
 static func apply(p: Player, effect: String, arg = null) -> Array:
     match effect:
@@ -96,6 +134,10 @@ static func apply(p: Player, effect: String, arg = null) -> Array:
         "ladushki": return ladushki(p)
         "vozduhan_hint": return vozduhan_hint(p)
         "vozduhan_bet": return vozduhan_bet(p)
+        "vozduhan_quest_take": return vozduhan_quest_take(p)
+        "popov_ozu_take": return popov_ozu_take(p)
+        "vozduhan_truth": return vozduhan_truth(p)
+        "vozduhan_lie": return vozduhan_lie(p)
     return ["...ничего не произошло."]
 
 
