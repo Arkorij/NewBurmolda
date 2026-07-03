@@ -1,0 +1,9 @@
+# Нормализуем переносы строк в текстовых файлах (LF в репозитории),
+# чтобы не спорить с CRLF на Windows у разных разработчиков.
+* text=auto eol=lf
+
+*.png binary
+*.ttf binary
+*.wav binary
+*.import linguist-generated
+*.uid linguist-generated
