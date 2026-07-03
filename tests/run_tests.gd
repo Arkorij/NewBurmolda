@@ -17,7 +17,10 @@ func _ready() -> void:
     _test_ttk()
     _test_quests()
     _test_balance()
-    _test_bullethell()
+    _test_bullet_kit()
+    _test_boss_kits()
+    _test_mob_threats()
+    _test_dialogs()
     _test_world()
     _test_story1()
     _test_story2()
@@ -133,7 +136,7 @@ func _test_ttk() -> void:
 
 
 func _test_balance() -> void:
-    print("\n-- баланс (хард/боссы/паттерны) --")
+    print("\n-- баланс (хард/боссы/модель боя) --")
     var p := Player.new("Баланс")
     # босс жирный: HP = base*mult + level*6
     var bhp := int(DataDB.bosses["kalitin"][1])
@@ -157,16 +160,7 @@ func _test_balance() -> void:
     gold0 = p.burmolda
     b9.resolve_victory()
     check(p.burmolda - gold0 > r1, "награда в харде выше (%d → %d)" % [r1, p.burmolda - gold0])
-    # паттерны боссов — фирменные, во 2-й фазе пул шире
-    var bs = load("res://scenes/Battle.tscn").instantiate()
-    bs.boss_key = "kalitin"
-    bs.battle = Battle.new(p, "kalitin")
-    var pool1: Array = bs._pick_pool()
-    check("walls" in pool1 and "laser" in pool1, "у Калитина кости/лучи")
-    bs.battle.phase2 = true
-    var pool2: Array = bs._pick_pool()
-    check(pool2.size() > pool1.size(), "во 2-й фазе пул атак шире (%d→%d)" % [pool1.size(), pool2.size()])
-    # фаза 2 срабатывает один раз на 50% HP
+    # фаза 2 срабатывает один раз на 50% HP (модель боя)
     var bk := Battle.new(p, "kalitin")
     check(bk.check_phase2().is_empty(), "фаза 2 не стартует на фулл HP")
     bk.enemy_hp = int(bk.enemy_max * 0.4)
@@ -174,24 +168,6 @@ func _test_balance() -> void:
     check(not bk.check_phase2().is_empty() and bk.phase2 and bk.edmg == dmg0 + 2,
           "на 40%% HP босс свирепеет (+2 урона)")
     check(bk.check_phase2().is_empty(), "повторно фаза 2 не анонсируется")
-    # мобы разных видов — разные стили атак
-    bs.boss_key = null
-    bs.battle = Battle.new(p, null, ["Костяной Пёс", 30, 5])
-    var skel_pool: Array = bs._pick_pool()
-    bs.battle = Battle.new(p, null, ["Кислотный Слизень", 30, 5])
-    var sliz_pool: Array = bs._pick_pool()
-    check("walls" in skel_pool and "rain" in sliz_pool and skel_pool != sliz_pool,
-          "скелет кидает кости, слизень — ливень (стили разные)")
-    # реролл даёт 1-2 валидных паттерна
-    bs.battle = Battle.new(p, null, ["Тест", 30, 5])
-    bs.hint_label = Label.new()
-    bs.add_child(bs.hint_label)
-    var okr := true
-    for _k in range(10):
-        bs._reshuffle(false)
-        okr = okr and bs.active.size() >= 1 and bs.active.size() <= 2
-    check(okr, "реролл даёт 1-2 активных паттерна (комбо)")
-    bs.free()
     # уворот: источники стакаются мультипликативно (как в Доте), потолок 60%
     var be := Battle.new(p, null, ["Тест", 30, 5])
     be.eq = {"block": 20}
@@ -217,155 +193,339 @@ func _test_balance() -> void:
     # кольцо Невозмутимости нельзя продать кузнецу
     check(Items.get_item("ring_calm_q").get("no_sell", false) == true,
           "Кольцо Невозмутимости помечено «не продаётся»")
-    # биом-эффекты в бою: маппинг + ожог у стен вулкана
-    var bb2 = load("res://scenes/Battle.tscn").instantiate()
-    bb2.enemy = ["Тест", 30, 5]
-    bb2.biome = "volcano"
-    GameState.new_game("Вулканщик")
-    add_child(bb2)
-    check(bb2._biome_kind() == "hot", "вулкан = раскалённые стены")
-    bb2.biome = "opera_ice"
-    check(bb2._biome_kind() == "ice", "ледяная опера = скольжение")
-    bb2.biome = "swamp"
-    check(bb2._biome_kind() == "goo", "болото = вязко")
-    bb2.biome = ""
-    check(bb2._biome_kind() == "", "подземелье/без биома = обычная физика")
-    bb2.biome = "volcano"
-    bb2._begin_bullets()
-    bb2.soul = bb2.box.position + Vector2(bb2.SOUL_SIZE, bb2.SOUL_SIZE)
-    var hp_before := GameState.player.hp
-    bb2._bullets_step(0.016)
-    check(GameState.player.hp < hp_before, "касание раскалённой стены жжёт")
-    # зелёные обманки безвредны, обычные — бьют
-    bb2.biome = ""
-    bb2._begin_bullets()
-    bb2.active = []
-    bb2._seg_t = 99.0
-    bb2._iframe = 0.0
-    bb2.battle.evade_sources = []
-    bb2.battle.eq = {}
-    bb2.bullets = [{"kind": "ball", "pos": bb2.soul, "vel": Vector2.ZERO, "cls": 1, "safe": true}]
-    var hp0 := GameState.player.hp
-    bb2._bullets_step(0.016)
-    check(GameState.player.hp == hp0, "🟢 зелёная обманка пролетает без урона")
-    bb2.bullets = [{"kind": "ball", "pos": bb2.soul, "vel": Vector2.ZERO, "cls": 1, "safe": false}]
-    bb2._bullets_step(0.016)
-    check(GameState.player.hp < hp0, "обычная пуля в той же точке — бьёт")
-    bb2.free()
 
 
-func _test_bullethell() -> void:
-    print("\n-- bullet-hell 2.0 (динамика по промпту) --")
-    var p := Player.new("Улётный")
-    var bs = load("res://scenes/Battle.tscn").instantiate()
-    bs.boss_key = "kalitin"
-    bs.battle = Battle.new(p, "kalitin")
-    bs.hint_label = Label.new()
-    bs.add_child(bs.hint_label)
-    # новые паттерны заведены
-    check(bs.PATTERN_NAMES.has("gapwall") and bs.PATTERN_NAMES.has("burst")
-          and bs.PATTERN_NAMES.has("gravity"), "новые паттерны: ЗАБОР/ЗАЛПЫ/СИНЯЯ ДУША")
-    # синие/оранжевые пули (правило Undertale)
-    check(bs._beh_blocks("still", 0.0) and not bs._beh_blocks("still", 100.0),
-          "🔵 синяя пуля не бьёт стоящего")
-    check(bs._beh_blocks("move", 100.0) and not bs._beh_blocks("move", 0.0),
-          "🟠 оранжевая пуля не бьёт движущегося")
-    check(not bs._beh_blocks("", 0.0) and not bs._beh_blocks("", 100.0),
-          "обычная пуля бьёт всегда")
-    # открытие боя босса — по срежиссированному сценарию (BOSS_OPENING)
-    bs.turn_no = 1
-    bs._seg_i = 0
-    bs._reshuffle(false)
-    check(bs.active.size() == 1 and bs.active[0].pat == "walls",
-          "открытие Калитина — по сценарию (КОСТИ)")
-    # после сценария: этап 0 — одиночные паттерны (без комбо)
-    bs._seg_i = 99
-    var intro_ok := true
-    for _i in range(12):
-        bs._reshuffle(false)
-        intro_ok = intro_ok and bs.active.size() == 1
-    check(intro_ok, "вне сценария в интро — по одному паттерну (этап 0)")
-    # драматургия: этапы боя ускоряют снаряды
-    var v0: float = bs._speed_mult()
-    bs.battle.phase2 = true
-    bs.turn_no = 9
-    check(bs._stage() == 3 and bs._speed_mult() > v0,
-          "финал босса быстрее интро (%.2f → %.2f)" % [v0, bs._speed_mult()])
-    # СИНЯЯ ДУША — эксклюзивный режим, не комбинируется с другими паттернами
-    var grav_ok := true
-    var grav_seen := false
-    for _i in range(40):
-        bs._reshuffle(false)
-        if bs._has_pat("gravity"):
-            grav_seen = true
-            grav_ok = grav_ok and bs.active.size() == 1 and bs.soul_mode == "blue"
-    check(grav_seen and grav_ok, "СИНЯЯ ДУША включается и не смешивается")
-    # спавнеры: забор — стена со щелью; залпы «проклёвываются» с телеграфом
-    bs.bullets.clear()
-    bs._spawn_gapwall()
-    check(bs.bullets.size() >= 6 and bs.bullets.size() <= 14,
-          "ЗАБОР — стена со щелью (%d пуль)" % bs.bullets.size())
-    bs.bullets.clear()
-    bs._spawn_burst()
-    var all_wait: bool = bs.bullets.size() >= 14
-    for b in bs.bullets:
-        all_wait = all_wait and float(b.get("wait", 0.0)) > 0.0
-    check(all_wait, "ЗАЛПЫ — мульти-кольца с телеграфом (%d пуль)" % bs.bullets.size())
-    # преследователь доводит и запирает курс (не вечное самонаведение)
-    bs.bullets.clear()
-    bs._spawn_pat({"pat": "homing", "cd": 0.0})
-    check(float(bs.bullets[0].get("steer", 0.0)) > 0.0,
-          "преследователь: довод, потом прямая")
-    # ГАРАНТИЯ ПРОХОДА: КОСТИ и ЗАБОР никогда не активны одновременно
-    var seal_ok := true
+const _PH_BULLETS := 3     # Phase.BULLETS
+const _PH_MENU := 1        # Phase.MENU
+const _PH_DONE := 4        # Phase.DONE
+
+
+func _fresh_arena(boss = null, enemy_arr = null) -> Node:
+    GameState.new_game("Полигон")
+    var a = load("res://scenes/Battle.tscn").instantiate()
+    a.boss_key = boss
+    if enemy_arr != null:
+        a.enemy = enemy_arr
+    add_child(a)               # _ready() создаёт battle
+    return a
+
+
+func _test_bullet_kit() -> void:
+    print("\n-- BulletKit (примитивы арены) --")
+    var a := _fresh_arena(null, ["Манекен", 30, 5])
+    a.soul = a.box.get_center()
+    a._hit_r = 6.0
+    a._iframe = 0.0
+    # 1. честный телеграф: фигура с warn безвредна, потом бьёт
+    a.bullets.clear()
+    GameState.player.hp = GameState.player.max_hp
+    a.spawn_shape(&"rect", a.soul, Vector2.ZERO, {"size": Vector2(24, 24), "warn": 0.3})
+    var hp0: int = GameState.player.hp
+    BulletKit.step_hazards(a, 0.05)
+    check(GameState.player.hp == hp0, "угроза в телеграфе безвредна")
+    a._iframe = 0.0
+    for _i in range(10):
+        a._iframe = 0.0
+        BulletKit.step_hazards(a, 0.05)
+    check(GameState.player.hp < hp0, "после телеграфа фигура бьёт")
+    # 2. силовое поле двигает сердце; снятое — нет
+    a.soul = a.box.get_center()
+    a.forces.clear()
+    var fid: int = a.add_force(&"wind", {"dir": Vector2(100, 0)})
+    var x0: float = a.soul.x
+    BulletKit.step_forces(a, 0.1)
+    check(a.soul.x > x0 + 5.0, "ветер двигает сердце")
+    a.remove_force(fid)
+    var x1: float = a.soul.x
+    BulletKit.step_forces(a, 0.1)
+    check(absf(a.soul.x - x1) < 0.01, "снятое поле не двигает")
+    # 3. опасная зона бьёт ТОЛЬКО после телеграфа
+    a.zones.clear()
+    a.soul = a.box.get_center()
+    a._iframe = 0.0
+    GameState.player.hp = GameState.player.max_hp
+    a.add_hazard_zone(Rect2(a.soul.x - 20, a.soul.y - 20, 40, 40), {"warn": 0.3, "active": 0.6})
+    var hz: int = GameState.player.hp
+    BulletKit.step_zones(a, 0.05)
+    check(GameState.player.hp == hz, "зона в телеграфе не бьёт")
+    for _i in range(8):
+        a._iframe = 0.0
+        BulletKit.step_zones(a, 0.05)
+    check(GameState.player.hp < hz, "зона бьёт после телеграфа")
+    # 4. безопасная зона: внутри цело, снаружи бьёт
+    a.zones.clear()
+    a._iframe = 0.0
+    a.soul = a.box.get_center()
+    a.add_safe_zone(Rect2(a.soul.x - 26, a.soul.y - 26, 52, 52), {"warn": 0.2, "active": 0.8})
+    var hs: int = GameState.player.hp
+    for _i in range(8):
+        BulletKit.step_zones(a, 0.05)
+    check(GameState.player.hp == hs, "внутри безопасной зоны не бьёт")
+    a.zones.clear()
+    a._iframe = 0.0
+    GameState.player.hp = GameState.player.max_hp
+    a.add_safe_zone(Rect2(a.box.position.x, a.box.position.y, 26, 26), {"warn": 0.2, "active": 0.8})
+    a.soul = a.box.get_center()      # снаружи маленькой безопасной зоны
+    var hs2: int = GameState.player.hp
+    for _i in range(8):
+        a._iframe = 0.0
+        BulletKit.step_zones(a, 0.05)
+    check(GameState.player.hp < hs2, "снаружи безопасной зоны бьёт")
+    # 5. коридор: примитив включается/снимается
+    a.set_corridor(Rect2(10, 10, 40, 40))
+    check(a.has_corridor, "коридор включён")
+    a.set_corridor(Rect2())
+    check(not a.has_corridor, "пустой rect снимает коридор")
+    # 6. clamp_step ограничивает шаг (достижимость безопасных точек)
+    check(BulletKit.clamp_step(0.0, 100.0, 10.0) == 10.0
+          and BulletKit.clamp_step(50.0, 20.0, 5.0) == 45.0,
+          "clamp_step: без «телепорта» (шаг ≤ max)")
+    # 7. биом-физика (маппинг) + ожог раскалённой стены
+    a.biome = "volcano"
+    check(a._biome_kind() == "hot", "вулкан = раскалённые стены")
+    a.biome = "opera_ice"
+    check(a._biome_kind() == "ice", "ледяная опера = скольжение")
+    a.biome = "swamp"
+    check(a._biome_kind() == "goo", "болото = вязко")
+    a.biome = ""
+    check(a._biome_kind() == "", "подземелье/без биома = обычная физика")
+    a.biome = "volcano"
+    a._begin_bullets()
+    a._active_attacks = []
+    a.soul = a.box.position + Vector2(a.SOUL_SIZE, a.SOUL_SIZE)
+    a._iframe = 0.0
+    a.bh_t = 0.0
+    GameState.player.hp = GameState.player.max_hp
+    var hb: int = GameState.player.hp
+    a._bullets_step(0.016)
+    check(GameState.player.hp < hb, "касание раскалённой стены жжёт")
+    a.free()
+    # 8. динамический хитбокс сжимается в плотном шквале
+    var a2 := _fresh_arena(null, ["Тест", 30, 5])
+    a2._begin_bullets()              # запускает лёгкую моб-угрозу (не даёт _next_beat спамить)
     for _i in range(60):
-        bs._reshuffle(false)
-        seal_ok = seal_ok and not (bs._has_pat("walls") and bs._has_pat("gapwall"))
-    check(seal_ok, "две «стены» не запечатывают проход (не комбинируются)")
-    # проход новой стены костей — рядом с прошлым (путь не рвётся)
-    bs.bullets.clear()
-    bs._last_gap_y = -1.0
-    bs._spawn_bone_wall()
-    var g1: float = bs._last_gap_y
-    bs._spawn_bone_wall()
-    check(absf(bs._last_gap_y - g1) <= 55.5,
-          "проходы соседних стен достижимы (сдвиг ≤55 пкс)")
-    # щель ЗАБОРА дрейфует ограниченно, без телепортов
-    bs._gap_x = -1.0
-    bs._bh_t = 0.0
-    bs._spawn_gapwall()
-    var gx1: float = bs._gap_x
-    bs._bh_t = 1.0
-    bs._spawn_gapwall()
-    check(absf(bs._gap_x - gx1) <= 58.5, "щель ЗАБОРА без телепортов (сдвиг ≤58 пкс)")
-    # телеграфы поджимаются к финалу босса, но не исчезают
-    check(bs._warn_mult() < 1.0 and bs._warn_mult() >= 0.7,
-          "телеграфы в финале короче, но читаемы (×%.2f)" % bs._warn_mult())
-    bs.free()
-    # ДИНАМИЧЕСКИЙ хитбокс: плотный шквал сжимает сердце
-    GameState.new_game("Хитбокс")
-    var bh = load("res://scenes/Battle.tscn").instantiate()
-    bh.enemy = ["Тест", 30, 5]
-    add_child(bh)
-    bh._begin_bullets()
-    bh.active = []
-    bh._seg_t = 99.0
-    bh._spike_done = true
-    var r0: float = bh._hit_r
-    for _i in range(60):
-        bh.bullets.append({"kind": "ball", "cls": 1, "safe": false,
-            "pos": bh.box.position, "vel": Vector2.ZERO})
+        a2.spawn_shape(&"rect", a2.box.position, Vector2.ZERO, {"size": Vector2(6, 6)})
+    var r0: float = a2._hit_r
     for _i in range(30):
-        bh._bullets_step(0.033)
-    check(bh._hit_r < r0 - 0.8 and bh._hit_r >= bh.HIT_R_MIN,
-          "плотный шквал сжимает хитбокс (%.1f → %.1f)" % [r0, bh._hit_r])
-    bh.free()
-    # разрыв сложности: у мобов снаряды медленнее, чем у босса в любом этапе
-    var ms = load("res://scenes/Battle.tscn").instantiate()
-    ms.battle = Battle.new(p, null, ["Комар", 10, 2], 2)
-    check(ms._stage() == -1 and ms._speed_mult() < 1.0,
-          "мобы прощают: снаряды медленнее (×%.2f)" % ms._speed_mult())
-    ms.free()
+        a2._bullets_step(0.033)
+    check(a2._hit_r < r0 - 0.8 and a2._hit_r >= a2.HIT_R_MIN,
+          "плотный шквал сжимает хитбокс (%.1f → %.1f)" % [r0, a2._hit_r])
+    a2.free()
+
+
+func _test_boss_kits() -> void:
+    print("\n-- авторские киты боссов --")
+    var keys := ["kalitin", "tsizi", "zhizha", "overseer", "pekl_master", "tm"]
+    var kits := {
+        "kalitin": KalitinKit.new(), "tsizi": TsiziKit.new(), "zhizha": ZhizhaKit.new(),
+        "overseer": OverseerKit.new(), "pekl_master": PeklMasterKit.new(), "tm": TmKit.new(),
+    }
+    for key in keys:
+        var kit = kits[key]
+        # opening() — непустые биты из валидных BossAttack; каждая атака НЕСЁТ правило
+        var op: Array = kit.opening()
+        var op_ok: bool = op.size() > 0
+        var rule_ok := true
+        for beat in op:
+            op_ok = op_ok and beat.size() >= 1
+            for atk in beat:
+                op_ok = op_ok and (atk is BossAttack)
+                rule_ok = rule_ok and not str(atk.name).is_empty() \
+                        and not str(atk.rule).is_empty()
+        check(op_ok, "%s: opening() даёт валидные биты (%d)" % [key, op.size()])
+        check(rule_ok, "%s: каждая атака несёт имя+правило (order-in-chaos)" % key)
+        # pick() — непустой набор своих атак в интро и в ярости
+        var p0: Array = kit.pick(0, false)
+        var p3: Array = kit.pick(3, true)
+        var pick_ok: bool = p0.size() >= 1 and p3.size() >= 1
+        for atk in p0 + p3:
+            pick_ok = pick_ok and (atk is BossAttack)
+        check(pick_ok, "%s: pick() даёт свои атаки (интро %d / ярость %d)" % [key, p0.size(), p3.size()])
+    # уникальность: имена атак не пересекаются между китами
+    var names_by := {}
+    for key in keys:
+        var set := {}
+        for beat in kits[key].opening():
+            for atk in beat:
+                set[atk.name] = true
+        names_by[key] = set
+    var overlap := 0
+    for i in range(keys.size()):
+        for j in range(i + 1, keys.size()):
+            for nm in names_by[keys[i]]:
+                if names_by[keys[j]].has(nm):
+                    overlap += 1
+    check(overlap == 0, "мувсеты боссов не пересекаются (общих атак: %d)" % overlap)
+    # дымовой прогон полного хода уворота — для всех 6 боссов, интро и ярость
+    for key in keys:
+        for hard in [false, true]:
+            var a := _fresh_arena(key)
+            if hard:
+                a.battle.phase2 = true
+                a.turn_no = 8
+            a._begin_bullets()
+            var frames := 0
+            while a.phase == _PH_BULLETS and frames < 1400:
+                GameState.player.hp = GameState.player.max_hp   # переживаем всю фазу (прогон всех атак)
+                a._bullets_step(0.033)
+                frames += 1
+            check(a.phase != _PH_BULLETS,
+                  "%s%s: ход уворота отыгрывается до конца" % [key, " (ярость)" if hard else ""])
+            a.free()
+    # фаза 2 достижима: кит и прогресс opening ЖИВУТ между ходами (не пересоздаются)
+    var ap := _fresh_arena("kalitin")
+    check(ap._kit != null, "кит босса создан один раз (в _ready)")
+    ap._beat_i = 3
+    ap._begin_bullets()      # НЕ должен сбросить _beat_i в 0
+    check(ap._beat_i >= 3, "_begin_bullets не сбрасывает opening → pick()/фаза 2 достижимы")
+    ap.free()
+
+
+func _test_mob_threats() -> void:
+    print("\n-- лёгкая моб-система (25 паттернов, независимо от вида/биома) --")
+    check(MobThreats.ARCHETYPES.size() >= 25, "25+ паттернов буллет-хелла для мобов (%d)"
+          % MobThreats.ARCHETYPES.size())
+    # каждый архетип собирается в валидную атаку с именем+правилом
+    var all_ok := true
+    for arch in MobThreats.ARCHETYPES:
+        var atk: BossAttack = MobThreats._make(arch)
+        all_ok = all_ok and (atk is BossAttack) and not str(atk.name).is_empty() \
+                and not str(atk.rule).is_empty()
+    check(all_ok, "каждый паттерн — валидная атака с именем+правилом")
+    # паттерн НЕ зависит от вида моба: один и тот же ключ даёт разные паттерны
+    var names := {}
+    for _i in range(60):
+        var seq: Array = MobThreats.sequence("komar")   # всегда один и тот же вид
+        names[seq[0].name] = true
+    check(names.size() >= 5, "паттерн случаен и независим от вида моба (%d разных из 60 бросков)"
+          % names.size())
+    # неизвестный вид тоже даёт валидную угрозу (без привязки к таблице)
+    var unknown: Array = MobThreats.sequence("совсем_неизвестный_моб")
+    check(unknown.size() >= 1 and unknown[0] is BossAttack,
+          "неизвестный вид моба тоже получает валидный паттерн")
+    # живой прогон КАЖДОГО паттерна ~1с — ловим рантайм-ошибки новых типов снарядов
+    # (кресты/лучи/ракеты/снайперы): спавн, движение, взрыв ракет, очередь снайпера
+    var ran := 0
+    for arch in MobThreats.ARCHETYPES:
+        var ra := _fresh_arena(null, ["Прогон", 20, 4])
+        ra._begin_bullets()
+        ra._active_attacks = [MobThreats._make(arch)]
+        ra._active_attacks[0].start(ra)
+        for _f in range(30):
+            GameState.player.hp = GameState.player.max_hp
+            ra._bullets_step(0.033)
+        ran += 1
+        ra.free()
+    check(ran == MobThreats.ARCHETYPES.size(), "все %d паттернов прогоняются вживую" % ran)
+    # дымовой прогон боя с мобом — доигрывается до конца
+    var a := _fresh_arena(null, ["🐸 Бешеная Жаба-Переросток", 24, 6])
+    a._begin_bullets()
+    var frames := 0
+    while a.phase == _PH_BULLETS and frames < 400:
+        GameState.player.hp = GameState.player.max_hp
+        a._bullets_step(0.033)
+        frames += 1
+    check(a.phase != _PH_BULLETS, "бой с мобом отыгрывается до конца")
+    a.free()
+    # биом влияет ТОЛЬКО на рамку/душу, независимо от паттерна: адский/данж моб —
+    # рамка меньше; пустоши — ветер сносит; ни то, ни другое не трогает выбор паттерна
+    var ah := _fresh_arena(null, ["Тест", 20, 4])
+    ah.biome = "hell"
+    ah._begin_bullets()
+    check(ah.box.size.x < 196.0 and ah.box.size.y < 150.0,
+          "адский/данж биом сжимает рамку моба")
+    ah.free()
+    var aw := _fresh_arena(null, ["Тест", 20, 4])
+    aw.biome = "wastes"
+    aw._begin_bullets()
+    var has_wind := false
+    for f in aw.forces:
+        if f.kind == &"wind":
+            has_wind = true
+    check(has_wind, "пустоши/пустыня дают ветер, сносящий душу моба")
+    aw.free()
+    # для боссов рамку биом НЕ трогает — её ведёт авторский кит
+    var ab := _fresh_arena("kalitin")
+    ab.biome = "hell"
+    ab._begin_bullets()
+    check(ab.box.size.x == 196.0 and ab.box.size.y == 150.0,
+          "у боссов биом не лезет в рамку — её ведёт кит")
+    ab.free()
+
+
+func _test_dialogs() -> void:
+    print("\n-- диалоги (одноразовость / цепочки / уровень / эффекты) --")
+    # 1. choice-опции одноразовы (once_flag) у ВСЕХ, кроме Деда (он всё забывает)
+    var ok := true
+    var total := 0
+    for kind in DataDB.npcs:
+        for opt in DataDB.npcs[kind].get("options", []):
+            if str(opt.get("kind", "")) != "choice":
+                continue
+            total += 1
+            var has_of: bool = opt.has("once_flag")
+            if kind == "ded":
+                ok = ok and not has_of
+            else:
+                ok = ok and has_of
+            for a in opt.get("answers", []):
+                ok = ok and not str(a.get("text", "")).is_empty() \
+                        and not str(a.get("line", "")).is_empty()
+    check(ok, "choice одноразовы везде, кроме Деда; ответы валидны")
+    check(total >= 50, "реплик с выбором много (%d)" % total)
+    # 2. есть реплики по уровню (гейт прокачки) + замкнутые цепочки set_flag→req_flag
+    var lvl := 0
+    var set_flags := {}
+    var req_flags := {}
+    for kind in DataDB.npcs:
+        for opt in DataDB.npcs[kind].get("options", []):
+            if opt.has("req_level") and int(opt["req_level"]) > 1:
+                lvl += 1
+            if opt.has("req_flag"):
+                req_flags[opt["req_flag"]] = true
+            for a in opt.get("answers", []):
+                if a.has("set_flag"):
+                    set_flags[a["set_flag"]] = true
+    check(lvl >= 3, "есть реплики-по-уровню (%d)" % lvl)
+    var chain_ok := set_flags.size() >= 3
+    for f in set_flags:
+        chain_ok = chain_ok and req_flags.has(f)
+    check(chain_ok, "цепочки замкнуты: каждый set_flag открывает req_flag-реплику (%d)" % set_flags.size())
+    # 3. поведение: одноразовость/уровень фильтруют, ответ даёт эффект + ставит флаг
+    GameState.new_game("Диалог")
+    var ns = load("res://scenes/NPC.tscn").instantiate()
+    ns.kind = "yampol"
+    add_child(ns)
+    ns.player.flags["dlg_yampol_pod"] = true
+    ns._rebuild_options()
+    var hidden := true
+    for o in ns.visible_options:
+        if str(o.get("once_flag", "")) == "dlg_yampol_pod":
+            hidden = false
+    check(hidden, "одноразовая реплика скрыта после ответа (флаг стоит)")
+    ns.player.level = 1
+    ns.player.flags.erase("dlg_yampol_grown")
+    ns._rebuild_options()
+    var lgated_hidden := true
+    for o in ns.visible_options:
+        if str(o.get("once_flag", "")) == "dlg_yampol_grown":
+            lgated_hidden = false
+    check(lgated_hidden, "реплика по уровню скрыта на низком уровне")
+    ns.player.level = 5
+    ns._rebuild_options()
+    var lvisible := false
+    for o in ns.visible_options:
+        if str(o.get("once_flag", "")) == "dlg_yampol_grown":
+            lvisible = true
+    check(lvisible, "реплика по уровню появляется на нужном уровне")
+    var sw0: int = GameState.player.swag
+    ns.current_choice = {"once_flag": "dlg_test_effect"}
+    ns._apply_answer({"text": "t", "line": "l", "swag": 3, "set_flag": "dlg_test_chain"})
+    check(GameState.player.swag == sw0 + 3, "ответ выдаёт эффект (свэг)")
+    check(GameState.player.flags.get("dlg_test_effect", false)
+          and GameState.player.flags.get("dlg_test_chain", false),
+          "ответ ставит once_flag и set_flag")
+    ns.free()
 
 
 func _test_world() -> void:
@@ -397,6 +557,17 @@ func _test_world() -> void:
     GameState.player.level = 99
     ow._travel("volcano")
     check(ow.loc_id == "volcano", "с высоким уровнем — пускает")
+    # F2 дебаг-меню боёв (вынесено в OverworldDebug): открывается и вызывает бой
+    ow.busy = false
+    OverworldDebug.open_debug_battles(ow)
+    check(ow.overlay.get_child_count() > 0, "F2 открывает дебаг-меню боёв")
+    var dpanel: Node = ow.overlay.get_child(ow.overlay.get_child_count() - 1)
+    OverworldDebug._on_debug_battle(0, ow, dpanel)   # кейс 0 — босс Калитин
+    var spawned := false
+    for c in ow.overlay.get_children():
+        if c.has_method("_begin_bullets"):  # это Battle-арена
+            spawned = true
+    check(spawned, "F2 → вызов боя с боссом спавнит Battle-арену")
     ow.free()
 
 
