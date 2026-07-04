@@ -46,16 +46,20 @@ class XSpray extends BossAttack:
             done = true
 
 
-# ── Крестовихрь: кресты по спирали из центра ──
+# ── Крестовихрь: кресты по спирали из центра (hold: 1с на отход) ──
 class XSpiral extends BossAttack:
     var _a := 0.0
     var _cd := 0.0
     func _init() -> void:
         name = "КРЕСТОВИХРЬ"
         rule = "кресты по спирали — иди против вращения"
+        hold = 1.0
     func start(arena) -> void:
         _a = randf() * TAU
+        _show_hold(arena)
     func update(arena, delta) -> void:
+        if holding():
+            return
         _cd -= delta
         if _cd <= 0.0:
             _cd = 0.16

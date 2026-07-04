@@ -348,12 +348,16 @@ static func _draw_shapes(arena) -> void:
             var ptsw := _orect_corners(center, s.half, s.angle)
             arena.draw_colored_polygon(ptsw, Color(tint, a * 0.5))
             arena.draw_polyline(_closed(ptsw), Color(tint, minf(a + 0.3, 0.95)), 1.5)
+            if s.shape == &"blade" and absf(float(s.spin)) > 0.01:
+                _draw_spin_hint(arena, s, tint)      # куда пойдёт хлыст
             continue
         var pts := _orect_corners(center, s.half, s.angle)
         arena.draw_colored_polygon(pts, tint)
         match s.shape:
             &"blade":                                # лезвие — светлая режущая кромка
                 arena.draw_line(pts[1], pts[2], tint.lightened(0.5), 2.0)
+                if absf(float(s.spin)) > 0.01:
+                    _draw_spin_hint(arena, s, tint)
             &"spinner":                              # вертушка — ступица в центре
                 arena.draw_circle(center, 3.0, tint.darkened(0.35))
             &"segment":                              # сегмент стены — тёмная окантовка
@@ -361,6 +365,21 @@ static func _draw_shapes(arena) -> void:
             _:                                       # планка — заклёпки по краям
                 arena.draw_circle(pts[0].lerp(pts[3], 0.5), 1.6, tint.darkened(0.4))
                 arena.draw_circle(pts[1].lerp(pts[2], 0.5), 1.6, tint.darkened(0.4))
+
+
+static func _draw_spin_hint(arena, s: Dictionary, tint: Color) -> void:
+    ## Еле заметная дуга со стрелкой у пивота вращающегося лезвия — показывает,
+    ## в какую сторону оно пойдёт (игрок не должен гадать влево/вправо).
+    var spin_sign := signf(float(s.spin))
+    var a0 := float(s.angle)
+    var sweep := 0.85 * spin_sign
+    var r := float(s.half.x) * 0.45
+    var col := Color(tint, 0.30)
+    arena.draw_arc(Vector2(s.pos), r, a0, a0 + sweep, 12, col, 1.5)
+    var tip: Vector2 = Vector2(s.pos) + Vector2.from_angle(a0 + sweep) * r
+    var tang := Vector2.from_angle(a0 + sweep + PI * 0.5 * spin_sign)
+    arena.draw_line(tip, tip - tang * 6.0 + Vector2.from_angle(a0 + sweep) * 3.0, col, 1.5)
+    arena.draw_line(tip, tip - tang * 6.0 - Vector2.from_angle(a0 + sweep) * 3.0, col, 1.5)
 
 
 static func _closed(pts: PackedVector2Array) -> PackedVector2Array:

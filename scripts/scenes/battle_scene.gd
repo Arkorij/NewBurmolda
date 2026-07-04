@@ -44,10 +44,14 @@ var hint_label: Label
 var main_menu: SoulMenu
 var sub_menu: SoulMenu
 
-# печатная машинка
+# печатная машинка (длинные сообщения бьются на страницы — не налезают на статы)
 var _full := ""
 var _reveal := 0.0
 var _after: Callable = Callable()
+var _pages: Array = []
+var _page_i := 0
+const LOG_CHARS_PER_LINE := 60    # ширина лога 544px, шрифт 15 — оценка переноса
+const LOG_MAX_ROWS := 9           # лог 188..~390, дальше статы/меню — не залезаем
 
 # подменю
 var _sub_kind := ""
@@ -72,7 +76,9 @@ var _force_seq := 0
 var turn_no := 0                  # номер хода врага — боссы разгоняются от хода к ходу
 var bh_t := 0.0                   # секунды с начала текущей фазы уворота
 var _bh_dur := 4.6
-var _stray_cd := 0.0              # таймер случайных «стрей»-пуль (только боссы, динамика)
+var _stray_cd := 0.0              # таймер «стрей»-пуль (фоновый слой Калитина)
+var _snow_cd := 1.0               # таймер снегопада (фоновый слой Цизи)
+var _gaze_cd := 2.2               # таймер «взгляда» (фоновый слой ТМ)
 
 # бой ведут АТАКИ (авторские) — до 2 одновременно (соло/комбо)
 var _active_attacks: Array = []
@@ -224,6 +230,7 @@ func _build_ui() -> void:
 
     sub_menu = SoulMenu.new()
     sub_menu.position = Vector2(64, 188)
+    sub_menu.max_visible = 8       # длинные списки (еда/приёмы) скроллятся, не утекают
     add_child(sub_menu)
     sub_menu.chosen.connect(_on_sub)
     sub_menu.cancelled.connect(_to_menu)
@@ -251,22 +258,33 @@ func _refresh_stats() -> void:
 
 # ─────────────── печать сообщений ───────────────
 func _show_lines(lines: Array, after: Callable) -> void:
-    _full = "\n".join(lines)
-    log_label.text = _full
-    log_label.visible = true
-    log_label.visible_characters = 0
-    _reveal = 0.0
+    _pages = UiText.paginate(lines, LOG_CHARS_PER_LINE, LOG_MAX_ROWS)
+    _page_i = 0
     _after = after
     phase = Phase.MESSAGE
     main_menu.hide_menu()
     sub_menu.hide_menu()
-    hint_label.text = "▼ ENTER"
+    _show_page()
     queue_redraw()
+
+
+func _show_page() -> void:
+    _full = _pages[_page_i]
+    log_label.text = _full
+    log_label.visible = true
+    log_label.visible_characters = 0
+    _reveal = 0.0
+    hint_label.text = "▼ ENTER (ещё %d)" % (_pages.size() - _page_i - 1) \
+            if _page_i < _pages.size() - 1 else "▼ ENTER"
 
 
 func _advance_message() -> void:
     if log_label.visible_characters != -1 and log_label.visible_characters < _full.length():
         log_label.visible_characters = -1
+        return
+    if _page_i < _pages.size() - 1:      # длинное сообщение: следующая страница
+        _page_i += 1
+        _show_page()
         return
     var cb := _after
     _after = Callable()
@@ -353,6 +371,7 @@ func _on_sub(i: int) -> void:
 
 
 func _resolve_action(msgs: Array) -> void:
+    _refresh_stats()
     _show_lines(msgs, _after_player)
 
 
@@ -443,12 +462,17 @@ func _begin_bullets() -> void:
     if boss_key != null:
         _bh_dur = 14.0 + danger * 0.24 + (3.2 if battle.phase2 else 0.0) \
                 + 0.9 * maxi(_compute_stage(), 0)
+        if boss_key == "overseer":
+            _bh_dur *= 0.7    # стражник Пекла: бьёт больнее, но файт короче
     else:
         _bh_dur = 3.4 + danger * 0.1
     bh_t = 0.0
     _iframe = 0.0
     _hitstop = 0.0
     _stray_cd = 0.7
+    _snow_cd = 1.0
+    _gaze_cd = 2.2
+    _tm_gaze = null
     _hit_r = HIT_R_MAX
     # у мобов очередь угроз перегенерируется каждый ход; у босса кит/opening
     # ЖИВУТ через все ходы (создан в _init_fight_ai) — не сбрасываем _beat_i!
@@ -456,6 +480,10 @@ func _begin_bullets() -> void:
         _mob_seq = MobThreats.sequence(_mob_key)
     _active_attacks = []
     _next_beat()
+    # атаки «из центра» дают 1с на отход (hold) — фаза длиннее на эту секунду,
+    # чтобы сама атака не потеряла свои 3-5с
+    if _kit == null and not _active_attacks.is_empty():
+        _bh_dur += _active_attacks[0].hold
     queue_redraw()
 
 
@@ -581,14 +609,9 @@ func _bullets_step(delta: float) -> void:
             _iframe = 0.45
             _refresh_stats()
 
-    # ── динамика боссов: случайные «стрей»-пули там-сям (резче + разнообразнее) ──
-    # чисто арена-уровневый слой поверх авторских атак; у мобов и в синем режиме нет
+    # ── фоновый босс-слой поверх авторских атак (у мобов и в синем режиме нет) ──
     if boss_key != null and soul_mode != "blue" and bh_t < _bh_dur - 0.6:
-        _stray_cd -= delta
-        if _stray_cd <= 0.0:
-            var st := _compute_stage()
-            _stray_cd = maxf(0.26, randf_range(0.55, 0.95) - 0.06 * st)
-            _spawn_stray(st)
+        _step_boss_ambient(delta)
 
     # ── динамический хитбокс: плотнее шквал — меньше сердце ──
     var dens := 0
@@ -648,9 +671,78 @@ func _bullet_hit() -> void:
     _refresh_stats()
 
 
+func _step_boss_ambient(delta: float) -> void:
+    ## Фоновый арена-слой КОНКРЕТНОГО босса поверх авторских атак (не в китах):
+    ## Калитин — «стрей»-пули (фиолетовое лезвие / жёлтые планки со стен) — у
+    ## него они легли идеально; Цизи — редкий, но постоянный снегопад; ТМ —
+    ## следящий «взгляд» из тьмы. У Жижи/Надзирателя/Магистра фонового слоя
+    ## пока НЕТ (решение владельца — придумает, чем добить их сложность).
+    match str(boss_key):
+        "kalitin":
+            _stray_cd -= delta
+            if _stray_cd <= 0.0:
+                var st := _compute_stage()
+                _stray_cd = maxf(0.26, randf_range(0.55, 0.95) - 0.06 * st)
+                _spawn_stray(st)
+        "tsizi":
+            _snow_cd -= delta
+            if _snow_cd <= 0.0:
+                _snow_cd = maxf(0.55, randf_range(1.0, 1.5) - 0.09 * maxi(_compute_stage(), 0))
+                _spawn_snowflake()
+        "tm":
+            _steer_tm_gaze(delta)
+            _gaze_cd -= delta
+            if _gaze_cd <= 0.0:
+                _gaze_cd = maxf(3.0, 4.8 - 0.35 * maxi(_compute_stage(), 0))
+                _spawn_tm_gaze()
+
+
+func _spawn_snowflake() -> void:
+    ## Цизи: одиночный снежок сверху с ветровым дрейфом — редкие, но постоянные,
+    ## значимы в сумме с порывами/вакуумом самого кита (не спам).
+    var x := randf_range(box.position.x + 6.0, box.end.x - 6.0)
+    var drift := randf_range(-28.0, 28.0)
+    spawn_shape(&"orb", Vector2(x, box.position.y - 12.0),
+        Vector2(drift, randf_range(56.0, 80.0)),
+        {"size": Vector2(10, 10), "warn": 0.0, "accel": Vector2(-drift * 0.30, 8.0),
+         "tint": Color("#e8f4ff")})
+
+
+var _tm_gaze = null    # лезвие-«взгляд» ТМ: после телеграфа медленно ведёт за душой
+
+func _spawn_tm_gaze() -> void:
+    ## ТМ: на краю арены открывается «взгляд» — тёмный луч, который после
+    ## телеграфа плавно доворачивается за душой. Спасение — движение по дуге.
+    var b := box
+    var p: Vector2
+    match randi() % 4:
+        0: p = Vector2(randf_range(b.position.x + 20.0, b.end.x - 20.0), b.position.y - 4.0)
+        1: p = Vector2(randf_range(b.position.x + 20.0, b.end.x - 20.0), b.end.y + 4.0)
+        2: p = Vector2(b.position.x - 4.0, randf_range(b.position.y + 16.0, b.end.y - 16.0))
+        _: p = Vector2(b.end.x + 4.0, randf_range(b.position.y + 16.0, b.end.y - 16.0))
+    _tm_gaze = spawn_shape(&"blade", p, Vector2.ZERO,
+        {"size": Vector2(minf(b.size.x, b.size.y) * 0.66, 8.0),
+         "angle": (soul - p).angle(), "warn": 0.6, "life": 2.3,
+         "tint": Color("#7a4ae0")})
+
+
+func _steer_tm_gaze(delta: float) -> void:
+    if _tm_gaze == null:
+        return
+    if float(_tm_gaze.get("life", 0.0)) <= 0.0:
+        _tm_gaze = null
+        return
+    if float(_tm_gaze.get("warn", 0.0)) > 0.0:
+        return                              # телеграф: направление зафиксировано
+    var want: float = (soul - Vector2(_tm_gaze.pos)).angle()
+    var diff := wrapf(want - float(_tm_gaze.angle), -PI, PI)
+    _tm_gaze.angle = float(_tm_gaze.angle) + clampf(diff, -1.1 * delta, 1.1 * delta)
+
+
 func _spawn_stray(st: int) -> void:
     ## Случайная одиночная угроза с края арены — «оживляет» бой босса и добавляет
     ## разнообразия. Всегда телеграфирована и одиночна → честно уворачиваемо.
+    ## С реворка босс-файтов — ТОЛЬКО у Калитина (см. _step_boss_ambient).
     var b := box
     var edge := randi() % 4
     var p: Vector2

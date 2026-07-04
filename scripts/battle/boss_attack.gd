@@ -12,6 +12,9 @@ class_name BossAttack
 var done := false
 var name := "АТАКА"       # короткое имя (в HUD)
 var rule := ""            # правило-подсказка: что делать игроку
+var hold := 0.0           # секунды «отойди» перед стартом: атаки, стартующие
+                          # ИЗ ЦЕНТРА, дают время убраться (иначе неуворачиваемо);
+                          # арена удлиняет фазу мобов на hold
 
 var _t := 0.0             # секунды с начала атаки
 var _forces: Array = []   # id силовых полей — снимаются в _cleanup()
@@ -37,6 +40,19 @@ func tick(arena, delta: float) -> void:
 
 func elapsed() -> float:
     return _t
+
+
+func holding() -> bool:
+    ## true, пока идёт пауза «отойди от центра» (см. hold).
+    return _t < hold
+
+
+func _show_hold(arena) -> void:
+    ## Мигающее кольцо-предупреждение в центре на время hold: «уйди отсюда».
+    ## Реализовано честным warn-телеграфом орба, который умирает сразу после.
+    arena.spawn_shape(&"orb", arena.box.get_center(), Vector2.ZERO,
+        {"size": Vector2(30, 30), "warn": hold, "life": 0.01,
+         "tint": Color("#ffd08a")})
 
 
 func _add_force(arena, kind: StringName, opts: Dictionary = {}) -> int:

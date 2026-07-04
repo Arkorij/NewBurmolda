@@ -91,9 +91,11 @@ class CableWhip extends BossAttack:
         var b: Rect2 = arena.box
         var pivot := Vector2(b.get_center().x, b.position.y - 6.0)
         var spin := (2.4 if _hard else 1.8) * (1.0 if randf() < 0.5 else -1.0)
+        # короче и живёт меньше (не проходит пол-экрана); направление вращения
+        # подсказывает еле заметная дуга-стрелка у пивота (рисует BulletKit)
         _blade = arena.spawn_shape(&"blade", pivot, Vector2.ZERO,
-            {"size": Vector2(b.size.y + 12.0, 9.0), "angle": PI * 0.5,
-             "spin": spin, "warn": 0.4, "life": (3.4 if _hard else 2.6),
+            {"size": Vector2(b.size.y * 0.78, 9.0), "angle": PI * 0.5,
+             "spin": spin, "warn": 0.4, "life": (2.6 if _hard else 2.0),
              "tint": Color("#d0d6e0")})
     func update(arena, delta) -> void:
         if _blade != null and _blade.get("life", 1.0) <= 0.0:

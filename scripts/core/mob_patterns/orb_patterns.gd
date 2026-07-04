@@ -52,16 +52,20 @@ class Rain extends BossAttack:
             done = true
 
 
-# ── Вихрь: спираль шариков из центра ──
+# ── Вихрь: спираль шариков из центра (hold: 1с на отход от центра) ──
 class Spin extends BossAttack:
     var _a := 0.0
     var _cd := 0.0
     func _init() -> void:
         name = "ВИХРЬ"
         rule = "спираль крутится — иди против вращения"
+        hold = 1.0
     func start(arena) -> void:
         _a = randf() * TAU
+        _show_hold(arena)
     func update(arena, delta) -> void:
+        if holding():
+            return
         _cd -= delta
         if _cd <= 0.0:
             _cd = 0.1
@@ -121,16 +125,20 @@ class Gust extends BossAttack:
             done = true
 
 
-# ── Крест: 4-рукавный крест шариков, вращается ──
+# ── Крест: 4-рукавный крест шариков, вращается (hold: 1с на отход) ──
 class Cross extends BossAttack:
     var _a := 0.0
     var _cd := 0.0
     func _init() -> void:
         name = "КРЕСТ"
         rule = "крест лучей крутится — лавируй между рукавами"
+        hold = 1.0
     func start(arena) -> void:
         _a = randf() * TAU
+        _show_hold(arena)
     func update(arena, delta) -> void:
+        if holding():
+            return
         _cd -= delta
         if _cd <= 0.0:
             _cd = 0.14
@@ -169,13 +177,18 @@ class Zigzag extends BossAttack:
             done = true
 
 
-# ── Пульс: расширяющееся кольцо шариков из центра ──
+# ── Пульс: расширяющееся кольцо шариков из центра (hold: 1с на отход) ──
 class Pulse extends BossAttack:
     var _cd := 0.0
     func _init() -> void:
         name = "ПУЛЬС"
         rule = "кольцо расширяется — беги наружу вовремя"
+        hold = 1.0
+    func start(arena) -> void:
+        _show_hold(arena)
     func update(arena, delta) -> void:
+        if holding():
+            return
         _cd -= delta
         if _cd <= 0.0:
             _cd = 0.62
@@ -274,25 +287,41 @@ class Drizzle extends BossAttack:
             done = true
 
 
-# ── Орбита: 3 шарика кружат по кольцу вокруг центра ──
+# ── Орбита: 3 шарика кружат, стягиваются к центру и РЕЗКО разлетаются ──
 class Orbit extends BossAttack:
     var _orbs: Array = []
+    var _ang := 0.0
+    var _r := 52.0
+    var _burst := false
     func _init() -> void:
         name = "ОРБИТА"
-        rule = "шарики кружат по кольцу — не пересекайся с ним"
+        rule = "кольцо стягивается к центру — жди резкого разлёта"
     func start(arena) -> void:
+        _ang = randf() * TAU
         var c: Vector2 = arena.box.get_center()
-        var n := 3
-        for i in range(n):
-            var ang: float = TAU * float(i) / float(n)
-            var p: Vector2 = c + Vector2.from_angle(ang) * 50.0
+        for i in range(3):
+            var p: Vector2 = c + Vector2.from_angle(_ang + TAU * float(i) / 3.0) * _r
             _orbs.append(arena.spawn_shape(&"orb", p, Vector2.ZERO,
-                {"size": Vector2(9, 9), "warn": 0.0, "tint": Color("#c8a0ff"), "life": 5.5}))
-    func update(arena, _delta) -> void:
+                {"size": Vector2(9, 9), "warn": 0.3, "tint": Color("#c8a0ff"), "life": 6.0}))
+    func update(arena, delta) -> void:
         var c: Vector2 = arena.box.get_center()
-        for o in _orbs:
-            var to_c: Vector2 = c - o.pos
-            o.vel = to_c.orthogonal().normalized() * 92.0 + to_c.normalized() * 30.0
+        if not _burst:
+            # спираль внутрь: позиции ведём напрямую (vel ноль)
+            _ang += delta * 2.6
+            _r = maxf(_r - delta * 21.0, 3.0)
+            for i in _orbs.size():
+                var o: Dictionary = _orbs[i]
+                if float(o.get("warn", 0.0)) > 0.0:
+                    continue
+                o.pos = c + Vector2.from_angle(_ang + TAU * float(i) / 3.0) * _r
+                o.vel = Vector2.ZERO
+            if _r <= 3.5:
+                # собрались в центре → раскрутка и резкий разлёт по касательной
+                _burst = true
+                arena._spark_burst(c, 10, Color("#c8a0ff"))
+                for i in _orbs.size():
+                    var o2: Dictionary = _orbs[i]
+                    o2.vel = Vector2.from_angle(_ang + TAU * float(i) / 3.0 + 0.9) * 168.0
         if elapsed() >= 5.5:
             done = true
 
