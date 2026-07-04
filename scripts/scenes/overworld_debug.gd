@@ -151,11 +151,7 @@ static func _debug_fight(ow, enemy_arr, bkey, dng: int, bio: String) -> void:
 # ─────────────── общий UI-хелпер (полупрозрачная панель + заголовок) ───────────────
 static func _panel(title_text: String) -> Control:
     var panel := Control.new()
-    panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-    var dim := ColorRect.new()
-    dim.color = Color(0, 0, 0, 0.8)
-    dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-    panel.add_child(dim)
+    ScreenFit.attach(panel, Color(0, 0, 0, 0.8))    # затемнение на всё окно
     var title := Label.new()
     title.text = title_text
     title.position = Vector2(70, 52)

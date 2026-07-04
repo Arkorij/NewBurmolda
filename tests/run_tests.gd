@@ -832,10 +832,25 @@ func _test_world() -> void:
             spawned = true
     check(spawned, "F2 → вызов боя с боссом спавнит Battle-арену")
     # зум камеры и миникарта
-    check(ow.cam.zoom == Vector2(2, 2), "камера приближена (зум x2)")
+    check(ow.cam.zoom == Vector2(ow.CAM_ZOOM, ow.CAM_ZOOM) and ow.CAM_ZOOM == 1.7,
+          "камера приближена (зум x1.7 — чуть дальше, чем x2)")
     check(is_instance_valid(ow.minimap) and ow.minimap.ow == ow,
           "миникарта подключена к надмиру")
     ow.free()
+    # адаптивное окно: expand-стретч + центрирование экранов ScreenFit
+    check(str(ProjectSettings.get_setting("display/window/stretch/aspect")) == "expand",
+          "stretch/aspect = expand (окно любого соотношения сторон)")
+    var bs2 = load("res://scenes/Blacksmith.tscn").instantiate()
+    add_child(bs2)
+    var fit_bg: ColorRect = null
+    for c in bs2.get_children():
+        if c is ColorRect and c.size == bs2.get_viewport_rect().size:
+            fit_bg = c
+    check(fit_bg != null and bs2.get_child(0) == fit_bg,
+          "ScreenFit: фон кузнеца растянут на всё окно (нижним слоем)")
+    check(bs2.position == ScreenFit.offset(bs2),
+          "ScreenFit: контент 640x480 отцентрован в окне")
+    bs2.free()
 
 
 func _test_story1() -> void:

@@ -20,6 +20,7 @@ const PADS := {
 
 
 func _ready() -> void:
+    ScreenFit.attach(self)
     _lbl("🎵 ЭХО БОЛОТА", 26, 66, Color("#35d6d6"))
     info_lbl = _lbl("Смотри и повторяй эхо стрелками.", 15, 396, Color("#9090a8"))
     set_process(true)
@@ -111,7 +112,7 @@ func _over() -> void:
 
 
 func _draw() -> void:
-    draw_rect(Rect2(0, 0, 640, 480), Color("#0a1014"), true)
+    ScreenFit.backdrop(self, Color("#0a1014"))
     for k in PADS:
         var col := Color("#35d6d6") if flash == k else Color("#183038")
         draw_rect(PADS[k], col, true)

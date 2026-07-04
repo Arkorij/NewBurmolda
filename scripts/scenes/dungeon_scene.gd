@@ -85,6 +85,7 @@ var font: Font
 
 
 func _ready() -> void:
+    ScreenFit.attach(self)
     font = ThemeDB.fallback_font
     info = Label.new()
     info.position = Vector2(12, 6)
@@ -601,7 +602,7 @@ func _off() -> Vector2:
 
 
 func _draw() -> void:
-    draw_rect(Rect2(0, 0, 640, 480), Color("#0b0810"), true)
+    ScreenFit.backdrop(self, Color("#0b0810"))
     if st.is_empty():
         return
     var pal := _pal()

@@ -16,7 +16,7 @@ var font: Font
 var cam: Camera2D
 var hud: HudPanel                # верхняя панель: HP/кринж-полосы, бурмолда, свэг
 var minimap: Minimap             # миникарта локации (правый нижний угол)
-const CAM_ZOOM := 2.0            # приближение камеры (тайлы 16px → видимые 32px)
+const CAM_ZOOM := 1.7            # приближение камеры (тайлы видимые ~27px)
 var overlay: CanvasLayer
 var mobs: Array = []             # видимые ходячие мобы: [{pos: Vector2i, enemy: [...]}]
 var wanderers: Array = []        # блуждающие NPC: [{pos: Vector2i, kind: String}]
@@ -56,7 +56,15 @@ func _ready() -> void:
     if lid == null or not DataDB.locations.has(lid):
         lid = DataDB.loc_index.get("start", "base")
     load_location(lid)
+    get_viewport().size_changed.connect(_on_viewport_resized)
     set_process_unhandled_input(true)
+
+
+func _on_viewport_resized() -> void:
+    ## Окно растянули — пересчитать лимиты камеры под новую видимую область.
+    if not grid.is_empty():
+        _update_camera()
+        queue_redraw()
 
 
 func load_location(id: String, from_id := "") -> void:
@@ -518,11 +526,7 @@ func _open_npc(kind: String) -> void:
 func _open_menu() -> void:
     busy = true
     var panel := Control.new()
-    panel.set_anchors_preset(Control.PRESET_FULL_RECT)
-    var dim := ColorRect.new()
-    dim.color = Color(0, 0, 0, 0.66)
-    dim.set_anchors_preset(Control.PRESET_FULL_RECT)
-    panel.add_child(dim)
+    ScreenFit.attach(panel, Color(0, 0, 0, 0.66))   # затемнение на всё окно
     var title := Label.new()
     title.text = "☰ МЕНЮ"
     title.position = Vector2(252, 120)
@@ -607,9 +611,11 @@ func _close_overlay(node: Node) -> void:
 # ─────────────── камера / HUD ───────────────
 func _update_camera() -> void:
     cam.position = Vector2(ppos.x * TILE + TILE * 0.5, ppos.y * TILE + TILE * 0.5)
-    # карта меньше видимой области (из-за зума) — центрируем её, а не липнем к углу
-    var vw := 640.0 / CAM_ZOOM
-    var vh := 480.0 / CAM_ZOOM
+    # карта меньше видимой области (зум/широкое окно) — центрируем, а не липнем к углу;
+    # размер видимой области берём из окна (stretch=expand, любое соотношение сторон)
+    var vs := get_viewport_rect().size
+    var vw := vs.x / CAM_ZOOM
+    var vh := vs.y / CAM_ZOOM
     var mw := float(int(grid[0].length()) * TILE)
     var mh := float(grid.size() * TILE)
     if mw < vw:

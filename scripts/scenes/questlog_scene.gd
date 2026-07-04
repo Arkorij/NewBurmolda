@@ -6,10 +6,7 @@ signal closed()
 
 func _ready() -> void:
     var p := GameState.player
-    var bg := ColorRect.new()
-    bg.color = Color("#0a0a12")
-    bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(bg)
+    ScreenFit.attach(self, Color("#0a0a12"))
     _lbl("📜 КВЕСТЫ", 24, Vector2(24, 20), 400, HORIZONTAL_ALIGNMENT_LEFT, Color("#f0c040"))
     var lines: Array = [Quests.main_goal(p), ""]
     if p.quests.is_empty():

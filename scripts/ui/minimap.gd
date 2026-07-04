@@ -41,7 +41,8 @@ func _draw() -> void:
     var cell := clampf(minf(MAX_W / float(gw), MAX_H / float(gh)), 1.0, 3.0)
     var pw := float(gw) * cell
     var ph := float(gh) * cell
-    var origin := Vector2(640.0 - pw - PAD - 10.0, 480.0 - ph - PAD - 10.0)
+    var vs := get_viewport_rect().size
+    var origin := Vector2(vs.x - pw - PAD - 10.0, vs.y - ph - PAD - 10.0)
     # подложка + рамка
     draw_rect(Rect2(origin - Vector2(PAD, PAD), Vector2(pw + PAD * 2, ph + PAD * 2)),
               Color(0.02, 0.02, 0.06, 0.78), true)

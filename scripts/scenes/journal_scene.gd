@@ -10,10 +10,7 @@ var body: Label
 
 func _ready() -> void:
     facts = DataDB.phrase("SWAMP_FACTS")
-    var bg := ColorRect.new()
-    bg.color = Color("#07100a")
-    bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(bg)
+    ScreenFit.attach(self, Color("#07100a"))
     _lbl("📖 ЖУРНАЛ БОЛОТА", 24, Vector2(0, 40), Color("#8fe1cb"))
     body = _lbl("", 17, Vector2(0, 170), Color("#dfe7ef"))
     body.size = Vector2(560, 200)

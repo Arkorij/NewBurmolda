@@ -15,10 +15,7 @@ const STOCK := ["weapon_0_2", "weapon_2_3", "armor_0_2", "armor_1_3", "shield_0_
 
 func _ready() -> void:
     player = GameState.player
-    var bg := ColorRect.new()
-    bg.color = Color("#120c0a")
-    bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(bg)
+    ScreenFit.attach(self, Color("#120c0a"))
     _lbl("🔨 КУЗНЕЦ", 24, Vector2(24, 20), 400, HORIZONTAL_ALIGNMENT_LEFT, Color("#f0997b"))
     speech = _lbl("«Гляди, што выковал. Дорого. Куёт — не гладит.»", 15,
                   Vector2(24, 60), 592, HORIZONTAL_ALIGNMENT_LEFT, Color("#f5c4b3"))

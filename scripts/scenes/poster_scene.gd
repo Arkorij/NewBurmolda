@@ -14,6 +14,7 @@ var _t := 0.0
 
 
 func _ready() -> void:
+    ScreenFit.attach(self)
     set_process(true)
     set_process_unhandled_input(true)
 
@@ -24,20 +25,23 @@ func _process(delta: float) -> void:
 
 
 func _draw() -> void:
-    # ── фон: почти чёрный с тёмным градиентом цвета босса ──
-    draw_rect(Rect2(0, 0, 640, 480), Color("#050308"), true)
+    # ── фон: почти чёрный с тёмным градиентом цвета босса (на всё окно) ──
+    ScreenFit.backdrop(self, Color("#050308"))
+    var vs := get_viewport_rect().size
     for i in range(6):
         var a := 0.05 - i * 0.007
-        draw_rect(Rect2(0, 90 + i * 40, 640, 40), Color(color.r, color.g, color.b, maxf(a, 0.0)), true)
+        draw_rect(Rect2(-position.x, 90 + i * 40, vs.x, 40),
+                  Color(color.r, color.g, color.b, maxf(a, 0.0)), true)
 
-    # ── вращающиеся лучи из центра ──
+    # ── вращающиеся лучи из центра (длина — до краёв любого окна) ──
     var c := Vector2(320, 208)
+    var ray := maxf(vs.x, vs.y) * 0.72
     for k in range(10):
         var a0 := _t * 0.35 + k * TAU / 10.0
         var pts := PackedVector2Array([
             c,
-            c + Vector2.from_angle(a0) * 340.0,
-            c + Vector2.from_angle(a0 + 0.14) * 340.0])
+            c + Vector2.from_angle(a0) * ray,
+            c + Vector2.from_angle(a0 + 0.14) * ray])
         draw_colored_polygon(pts, Color(color.r, color.g, color.b, 0.05))
 
     # ── пульсирующий ореол + тень-постамент ──

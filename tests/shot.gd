@@ -176,6 +176,24 @@ func _ready() -> void:
     await _save("08_dungeon_chests")
     dg.free()
 
+    # ── адаптивность: те же экраны в окне 16:9 (stretch=expand) ──
+    get_window().size = Vector2i(1136, 640)
+    await _wait()
+    var oww = load("res://scenes/Overworld.tscn").instantiate(); add_child(oww)
+    await _wait(); await get_tree().create_timer(0.4).timeout
+    await _save("11_wide_overworld")
+    oww.free()
+    var bw = load("res://scenes/Battle.tscn").instantiate()
+    bw.boss_key = "kalitin"
+    add_child(bw)
+    await _wait()
+    bw._begin_bullets()
+    await get_tree().create_timer(0.8).timeout
+    await _save("11_wide_battle")
+    bw.free()
+    var invw = load("res://scenes/Inventory.tscn").instantiate(); add_child(invw)
+    await _wait(); await _save("11_wide_inventory"); invw.free()
+
     print("SHOTS DONE")
     get_tree().quit()
 

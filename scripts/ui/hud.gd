@@ -11,7 +11,7 @@ var text := ""                   # собранная строка состоя�
 
 
 func _ready() -> void:
-    size = Vector2(640, H + 20)
+    set_anchors_preset(Control.PRESET_FULL_RECT)   # окно любой ширины
     mouse_filter = Control.MOUSE_FILTER_IGNORE
 
 
@@ -38,10 +38,11 @@ func _bar(r: Rect2, ratio: float, back: Color, front: Color, border: Color) -> v
 func _draw() -> void:
     var font := ThemeDB.fallback_font
     var p := GameState.player
+    var vw := get_viewport_rect().size.x
 
-    # подложка + нижняя каёмка
-    draw_rect(Rect2(0, 0, 640, H), Color(0.03, 0.03, 0.07, 0.82), true)
-    draw_line(Vector2(0, H), Vector2(640, H), Color("#3a3a55"), 2.0)
+    # подложка + нижняя каёмка — на всю ширину окна
+    draw_rect(Rect2(0, 0, vw, H), Color(0.03, 0.03, 0.07, 0.82), true)
+    draw_line(Vector2(0, H), Vector2(vw, H), Color("#3a3a55"), 2.0)
 
     # ── локация + ранг/уровень (слева) ──
     draw_string(font, Vector2(10, 19), loc_name,
@@ -83,10 +84,10 @@ func _draw() -> void:
     draw_string(font, Vector2(sx, 38), "свэг",
                 HORIZONTAL_ALIGNMENT_LEFT, -1, 9, Color("#8f8fa8"))
 
-    # ── подсказка управления (справа) ──
-    draw_string(font, Vector2(524, 19), "стрелки — ход",
+    # ── подсказка управления (прижата к правому краю окна) ──
+    draw_string(font, Vector2(vw - 116.0, 19), "стрелки — ход",
                 HORIZONTAL_ALIGNMENT_LEFT, 112, 10, Color("#6a6a80"))
-    draw_string(font, Vector2(524, 34), "ENTER — меню",
+    draw_string(font, Vector2(vw - 116.0, 34), "ENTER — меню",
                 HORIZONTAL_ALIGNMENT_LEFT, 112, 10, Color("#6a6a80"))
 
     # ── тост-сообщение под панелью ──

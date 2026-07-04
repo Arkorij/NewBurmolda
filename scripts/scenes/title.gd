@@ -6,10 +6,7 @@ var font: Font
 
 func _ready() -> void:
     font = ThemeDB.fallback_font
-    var bg := ColorRect.new()
-    bg.color = Color("#07100a")
-    bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-    add_child(bg)
+    ScreenFit.attach(self, Color("#07100a"))   # фон на всё окно, контент по центру
     _big(DataDB.balance.get("GAME_TITLE", "БУРМОЛДА"), 46, 150, Color("#7CFC5A"))
     _big(DataDB.balance.get("GAME_SUBTITLE", "самый свэг кринж"), 18, 210, Color("#8fe1cb"))
     _big("ENTER — новая игра", 18, 300, Color("#f0f0ff"))

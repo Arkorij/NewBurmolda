@@ -20,6 +20,7 @@ const SPEED := 1.5
 
 
 func _ready() -> void:
+    ScreenFit.attach(self)
     info = DataDB.node_info.get(node_type, {})
     res_list = info.get("resources", [])
     title_lbl = _lbl("%s  %s" % [info.get("emoji", ""), info.get("title", "ДОБЫЧА")], 26, 90, Color("#f0c040"))
@@ -104,7 +105,7 @@ func _finalize() -> void:
 
 
 func _draw() -> void:
-    draw_rect(Rect2(0, 0, 640, 480), Color("#0a0a12"), true)
+    ScreenFit.backdrop(self, Color("#0a0a12"))
     if phase == "summary":
         return
     draw_rect(BAR, Color("#222232"), true)

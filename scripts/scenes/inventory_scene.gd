@@ -38,6 +38,7 @@ var font: Font
 
 
 func _ready() -> void:
+    ScreenFit.attach(self)
     player = GameState.player
     font = ThemeDB.fallback_font
     set_process_unhandled_input(true)
@@ -177,7 +178,7 @@ func _tier_color(key: String) -> Color:
 
 
 func _draw() -> void:
-    draw_rect(Rect2(0, 0, 640, 480), Color("#0a0a12"), true)
+    ScreenFit.backdrop(self, Color("#0a0a12"))
     draw_string(font, Vector2(16, 30), "🎒 ИНВЕНТАРЬ",
                 HORIZONTAL_ALIGNMENT_LEFT, -1, 22, Color("#f0c040"))
     _draw_summary()

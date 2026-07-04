@@ -176,6 +176,7 @@ func move_box(target: Rect2, opts: Dictionary = {}) -> void:
 
 
 func _ready() -> void:
+    ScreenFit.attach(self)          # контент 640x480 центруется в окне любого формата
     player = GameState.player
     battle = Battle.new(player, boss_key, enemy, danger)
     _init_fight_ai()
@@ -528,7 +529,10 @@ func _update_hint() -> void:
 func _process(delta: float) -> void:
     if _shake > 0.0:
         _shake = maxf(0.0, _shake - 26.0 * delta)
-        position = Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * _shake
+        position = ScreenFit.offset(self) \
+                + Vector2(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * _shake
+    elif position != ScreenFit.offset(self):
+        position = ScreenFit.offset(self)    # после тряски — назад в центр окна
     elif position != Vector2.ZERO:
         position = Vector2.ZERO
     _evade_t = maxf(0.0, _evade_t - delta)
@@ -830,7 +834,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 # ─────────────── отрисовка ───────────────
 func _draw() -> void:
-    draw_rect(Rect2(0, 0, 640, 480), Color("#0a0a12"), true)
+    ScreenFit.backdrop(self, Color("#0a0a12"))
     var ekey: String = boss_key if (boss_key != null and Sprites.has(boss_key)) else Sprites.mob_key(battle.ename)
     Sprites.draw_grid(self, Rect2(268, 44, 104, 96), ekey)
     if phase != Phase.BULLETS:
@@ -881,4 +885,4 @@ func _draw() -> void:
 
 func _draw_flash() -> void:
     if _hitflash > 0.0:
-        draw_rect(Rect2(0, 0, 640, 480), Color(1, 1, 1, _hitflash * 2.2), true)
+        ScreenFit.backdrop(self, Color(1, 1, 1, _hitflash * 2.2))

@@ -35,6 +35,7 @@ const COLORS := {
 
 
 func _ready() -> void:
+    ScreenFit.attach(self)
     cfg = DataDB.npcs[kind]
     player = GameState.player
     options_data = cfg.get("options", [])
@@ -115,7 +116,7 @@ func _show_page() -> void:
 
 
 func _draw() -> void:
-    draw_rect(Rect2(0, 0, 640, 480), Color("#0a0a12"), true)
+    ScreenFit.backdrop(self, Color("#0a0a12"))
     draw_rect(Rect2(20, 56, 128, 128), Color("#14141f"), true)
     Sprites.draw_npc(self, Rect2(24, 60, 120, 120), kind)
 
