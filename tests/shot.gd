@@ -45,6 +45,11 @@ func _ready() -> void:
 
     var ow = load("res://scenes/Overworld.tscn").instantiate(); add_child(ow)
     await _wait(); await _save("02_overworld")
+    p.hp = int(p.max_hp * 0.4)           # HUD: полосы HP/кринжа + тост
+    p.cringe = int(p.next_level_cringe() * 0.6)
+    ow._flash("💾 сохранено — тост-сообщение под HUD")
+    await _wait(); await _save("02_overworld_hud")
+    p.hp = p.max_hp
     p.level = 99
     for lid in ["tropa", "harbor", "volcano", "ice"]:
         if DataDB.locations.has(lid):
@@ -63,16 +68,49 @@ func _ready() -> void:
     await _wait(); await _save("04_battle_fight")
     b._begin_bullets()
     await _wait_long(); await _save("05_battle_bullets")
-    # комбо: кости + ливень одновременно, коробка сжата
-    b._begin_bullets()
-    b.active = [{"pat": "walls", "cd": 0.0}, {"pat": "rain", "cd": 0.0}]
-    b._seg_t = 99.0
-    b.box_target = Rect2(245, 200, 150, 110)
-    b.bullets.clear()
-    b.zones.clear()
-    await get_tree().create_timer(1.2).timeout
-    await _save("05_combo_walls_rain")
+    # длинный лог исхода — постраничный (не должен налезать на статы)
+    var big: Array = []
+    for i in range(14):
+        big.append("Длинная строка исхода боя номер %d — лут, кринж и прочие радости." % i)
+    b._show_lines(big, func(): pass)
+    b._advance_message()      # дописать первую страницу мгновенно
+    await _wait(); await _save("05_battle_longlog")
     b.free()
+
+    # босс-файты: Калитин (хлыст с подсказкой), Цизи (снегопад), ТМ (взгляд)
+    var bk = load("res://scenes/Battle.tscn").instantiate()
+    bk.boss_key = "kalitin"
+    add_child(bk)
+    await _wait()
+    bk._begin_bullets()
+    bk._active_attacks = [KalitinKit.CableWhip.new()]
+    bk._active_attacks[0].start(bk)
+    bk._stray_cd = 0.2
+    await get_tree().create_timer(0.7).timeout
+    await _save("10_boss_kalitin_whip")
+    bk.free()
+    var bt = load("res://scenes/Battle.tscn").instantiate()
+    bt.boss_key = "tsizi"
+    add_child(bt)
+    await _wait()
+    bt._begin_bullets()
+    bt._snow_cd = 0.0
+    for _s in range(5):
+        bt._spawn_snowflake()
+    await get_tree().create_timer(0.9).timeout
+    await _save("10_boss_tsizi_snow")
+    bt.free()
+    var btm = load("res://scenes/Battle.tscn").instantiate()
+    btm.boss_key = "tm"
+    btm.enemy = ["ТМ", 460, 17]
+    add_child(btm)
+    await _wait()
+    btm._begin_bullets()
+    btm._gaze_cd = 0.0
+    btm._step_boss_ambient(0.016)
+    await get_tree().create_timer(1.0).timeout
+    await _save("10_boss_tm_gaze")
+    btm.free()
 
     var np = load("res://scenes/NPC.tscn").instantiate(); np.kind = "yampol"; add_child(np)
     await _wait(); await _save("06_npc"); np.free()
@@ -85,23 +123,57 @@ func _ready() -> void:
         await _save("06_npc_" + wk)
         wn.free()
 
+    # инвентарь: снаряга + добыча + резерв ОЗУ + квестовые обереги
+    p.add_item("weapon_2_3"); p.add_item("weapon_0_0"); p.add_item("armor_1_3")
+    p.add_item("ring_freeze_3"); p.add_item("trinket_2_2")
+    p.add_item("оберег Ямполь")
+    p.add_item("ржавая руда", 7); p.add_item("мелкая рыбёшка", 3)
+    p.add_item("пучок кринж-травы", 2); p.add_item("тёмный кристалл-кринж")
+    p.add_item("мятая кость", 4); p.add_item("уголёк-бурмолёк", 2)
+    p.add_item("цветок свэга"); p.add_item("перо стервятника")
+    p.add_item("сердце пекла"); p.add_item("зольный слиток")
+    p.add_item("ледяная крошка", 2); p.add_item("клок шерсти-кринж")
+    p.add_item("ком жирной грязи", 3)
+    p.add_item("ОЗУ", 2); p.flags["popov_ozu_taken"] = true
+    p.add_item("череп Калитина"); p.add_item("карманный вентилятор")
+    p.add_item("пропуск на болотный движ"); p.add_item("отросток лианы")
+    p.add_item("зелье уворота"); p.add_item("болотная шаурма")
+    p.add_item("стейк из топляка")
     var inv = load("res://scenes/Inventory.tscn").instantiate(); add_child(inv)
-    await _wait(); await _save("07_inventory"); inv.free()
+    await _wait(); await _save("07_inventory_weapon")
+    for tabshot in [[3, "trinkets"], [5, "supplies"], [6, "loot"], [7, "quest"]]:
+        inv.tab_i = tabshot[0]
+        inv._rebuild()
+        await _wait()
+        await _save("07_inventory_" + str(tabshot[1]))
+    inv.free()
 
-    # адская шахта: река лавы / озеро с рыбами / этаж ТМ
+    # адская шахта: все виды комнат + ярусы палитр + пост-ТМ пепелище
     var dg = load("res://scenes/Dungeon.tscn").instantiate(); add_child(dg)
-    dg.st = dg._gen_room(3, "lava_river"); dg.rooms[3] = dg.st; dg.depth = 3
-    dg.ppos = Vector2i(1, dg._midy())
+    var dshots := [
+        [3, "lava_river", "river"], [7, "lava_lake", "lake"],
+        [4, "water_lake", "water"], [8, "crystal", "crystal"],
+        [12, "mushroom", "mushroom"], [16, "bones", "bones"],
+        [23, "ash", "ash_postm"], [20, "tm", "tm"],
+    ]
+    for ds in dshots:
+        dg.st = dg._gen_room(ds[0], ds[1])
+        dg.rooms[ds[0]] = dg.st
+        dg.depth = ds[0]
+        dg.ppos = Vector2i(1, dg._midy())
+        dg.busy = false
+        dg._update_info()
+        await _wait(); await get_tree().create_timer(0.5).timeout
+        await _save("08_dungeon_" + str(ds[2]))
+    # золотой сундук крупным планом: комната с форс-золотом
+    dg.st = dg._gen_room(12, "plain")
+    dg.st.chests.clear()
+    dg.st.chests.append({"pos": Vector2i(6, dg._midy() - 2), "opened": false, "gold": true})
+    dg.st.chests.append({"pos": Vector2i(9, dg._midy() - 2), "opened": false, "gold": false})
+    dg.rooms[12] = dg.st
+    dg.depth = 12
     await _wait(); await get_tree().create_timer(0.4).timeout
-    await _save("08_dungeon_river")
-    dg.st = dg._gen_room(7, "lava_lake"); dg.rooms[7] = dg.st; dg.depth = 7
-    dg.ppos = Vector2i(1, dg._midy())
-    await _wait(); await get_tree().create_timer(0.6).timeout
-    await _save("08_dungeon_lake")
-    dg.st = dg._gen_room(25, "tm"); dg.rooms[25] = dg.st; dg.depth = 25
-    dg.ppos = Vector2i(1, dg._midy())
-    dg.busy = false
-    await _wait(); await _save("08_dungeon_tm")
+    await _save("08_dungeon_chests")
     dg.free()
 
     print("SHOTS DONE")

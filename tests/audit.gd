@@ -181,7 +181,7 @@ func _bfs_dungeon(dg, start: Vector2i) -> Dictionary:
             var n: Vector2i = p + d
             if visited.has(n):
                 continue
-            if dg._cell(n) == ".":
+            if dg._cell(n) == "." or dg._cell(n) == "M":   # грибы проходимы
                 visited[n] = true
                 queue.append(n)
     return visited

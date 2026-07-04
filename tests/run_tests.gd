@@ -18,9 +18,12 @@ func _ready() -> void:
     _test_quests()
     _test_balance()
     _test_bullet_kit()
+    _test_hp_ui_sync()
+    _test_boss_ambient()
     _test_boss_kits()
     _test_mob_threats()
     _test_dialogs()
+    _test_ui_polish()
     _test_world()
     _test_story1()
     _test_story2()
@@ -44,7 +47,7 @@ func check(cond: bool, msg: String) -> void:
 # ─────────────── тесты ───────────────
 func _test_data_integrity() -> void:
     print("\n-- данные --")
-    check(DataDB.items.size() == 119, "119 предметов (получено %d)" % DataDB.items.size())
+    check(DataDB.items.size() == 122, "122 предмета (получено %d)" % DataDB.items.size())
     check(DataDB.locations.size() == 35, "35 локаций (%d)" % DataDB.locations.size())
     check(DataDB.npcs.size() == 17, "17 NPC (%d)" % DataDB.npcs.size())
     var bad := 0
@@ -313,6 +316,112 @@ func _test_bullet_kit() -> void:
     a2.free()
 
 
+func _test_hp_ui_sync() -> void:
+    print("\n-- HP-бар/лейбл синхронны с уроном сразу после атаки --")
+    var a := _fresh_arena(null, ["Манекен", 200, 5])
+    var hp0: int = a.battle.enemy_hp
+    var w0: float = a.hp_fg.size.x
+    var r: Array = a.battle._hit(10)          # детерминированный урон, минуя шанс промаха
+    a._resolve_action(r[1])
+    check(a.battle.enemy_hp == hp0 - 10, "урон нанесён (модель боя)")
+    check(a.hp_fg.size.x < w0, "HP-полоса обновилась сразу после атаки (не ждёт побочных событий)")
+    check(("HP %d/" % a.battle.enemy_hp) in a.enemy_label.text,
+          "текст HP-лейбла соответствует актуальному battle.enemy_hp")
+    a.free()
+
+
+func _test_boss_ambient() -> void:
+    print("\n-- фоновые босс-слои (стрей/снег/взгляд) и hold мобов --")
+    # Калитин: стрей-пули остались только у него
+    var ak := _fresh_arena("kalitin")
+    ak.bullets.clear()
+    ak._stray_cd = 0.0
+    ak._step_boss_ambient(0.016)
+    check(ak.bullets.size() > 0, "Калитин: стрей-пули на месте")
+    ak.free()
+    # Цизи: вместо стрея — снегопад (одиночные снежки сверху)
+    var at = _fresh_arena("tsizi")
+    at.bullets.clear()
+    at._snow_cd = 0.0
+    at._step_boss_ambient(0.016)
+    check(at.bullets.size() == 1 and at.bullets[0].shape == &"orb"
+          and at.bullets[0].pos.y < at.box.position.y,
+          "Цизи: снежок падает сверху (не стрей)")
+    at.free()
+    # ТМ: следящий «взгляд»-лезвие, доворачивается за душой после телеграфа
+    var am = _fresh_arena("tm", ["ТМ", 300, 14])
+    am.bullets.clear()
+    am._gaze_cd = 0.0
+    am._step_boss_ambient(0.016)
+    check(am._tm_gaze != null and am._tm_gaze.shape == &"blade",
+          "ТМ: «взгляд»-лезвие заспавнился")
+    am._tm_gaze.warn = 0.0
+    am._tm_gaze.pos = am.box.position
+    am._tm_gaze.angle = 0.0
+    am.soul = am.box.end
+    var a0: float = am._tm_gaze.angle
+    am._steer_tm_gaze(0.1)
+    check(am._tm_gaze.angle > a0, "взгляд ТМ доворачивается к душе")
+    am.free()
+    # Жижа/Надзиратель/Магистр: фонового слоя нет
+    var clean := true
+    for bk in ["zhizha", "overseer", "pekl_master"]:
+        var az = _fresh_arena(bk, ["Тест", 100, 8]) if bk != "zhizha" else _fresh_arena("zhizha")
+        az.bullets.clear()
+        az._stray_cd = 0.0
+        az._snow_cd = 0.0
+        az._gaze_cd = 0.0
+        for _i in range(30):
+            az._step_boss_ambient(0.05)
+        if not az.bullets.is_empty():
+            clean = false
+        az.free()
+    check(clean, "у Жижи/Надзирателя/Магистра стрей-пуль больше нет")
+    # хлыст Калитина: короче коробки и с ограниченной жизнью
+    var aw = _fresh_arena("kalitin")
+    aw.bullets.clear()
+    var whip = KalitinKit.CableWhip.new()
+    whip.start(aw)
+    var bl: Dictionary = aw.bullets[0]
+    check(float(bl.half.x) * 2.0 < aw.box.size.y and float(bl.life) <= 2.1,
+          "хлыст Калитина укорочен и живёт меньше")
+    check(absf(float(bl.spin)) > 0.01, "у хлыста есть spin — BulletKit рисует подсказку направления")
+    aw.free()
+    # hold: центровые атаки мобов дают 1с на отход и не стреляют в это время
+    check(MobThreats._make("spin").hold == 1.0 and MobThreats._make("pulse").hold == 1.0
+          and MobThreats._make("cross").hold == 1.0 and MobThreats._make("xspiral").hold == 1.0,
+          "hold=1с у всех атак из центра")
+    check(MobThreats._make("rain").hold == 0.0 and MobThreats._make("spray").hold == 0.0,
+          "у атак с краёв hold нет")
+    var ah := _fresh_arena(null, ["Манекен", 30, 5])
+    ah.bullets.clear()
+    var spin_atk = MobThreats._make("spin")
+    spin_atk.start(ah)
+    for _i in range(6):
+        spin_atk.tick(ah, 0.1)          # 0.6с — ещё hold
+    var live := 0
+    for b in ah.bullets:
+        if float(b.warn) <= 0.0 and not b.get("safe", false):
+            live += 1
+    check(live == 0, "во время hold настоящих пуль нет (только телеграф в центре)")
+    for _i in range(8):
+        spin_atk.tick(ah, 0.1)          # 1.4с — атака пошла
+    check(ah.bullets.size() > 1, "после hold вихрь стреляет")
+    # Орбита: стягивается к центру и РЕЗКО разлетается (не застревает в центре)
+    ah.bullets.clear()
+    var orb_atk = MobThreats._make("orbit")
+    orb_atk.start(ah)
+    for _i in range(30):
+        orb_atk.tick(ah, 0.1)           # 3с — успела собраться и лопнуть
+    check(orb_atk._burst, "орбита собралась в центре и лопнула")
+    var flying := true
+    for o in orb_atk._orbs:
+        if Vector2(o.vel).length() < 100.0:
+            flying = false
+    check(flying, "шарики орбиты резко разлетелись (не застряли в центре)")
+    ah.free()
+
+
 func _test_boss_kits() -> void:
     print("\n-- авторские киты боссов --")
     var keys := ["kalitin", "tsizi", "zhizha", "overseer", "pekl_master", "tm"]
@@ -528,6 +637,160 @@ func _test_dialogs() -> void:
     ns.free()
 
 
+func _test_ui_polish() -> void:
+    print("\n-- UI: пагинация, скролл меню, инвентарь, HUD --")
+    # 1. UiText.paginate: длинный текст режется на страницы, каждая влезает
+    var lines: Array = []
+    for i in range(20):
+        lines.append("строка-%02d " % i + "х".repeat(90))
+    var pages := UiText.paginate(lines, 50, 7)
+    check(pages.size() > 1, "длинное сообщение разбито на страницы (%d)" % pages.size())
+    var fits := true
+    for pg in pages:
+        var rows := 0
+        for l in str(pg).split("\n"):
+            rows += UiText.wrapped_rows(l, 50)
+        if rows > 7:
+            fits = false
+    check(fits, "каждая страница влезает в отведённые строки")
+    check(UiText.paginate(["коротко"], 50, 7).size() == 1, "короткое сообщение — одна страница")
+    # 2. SoulMenu: скролл-окно не показывает больше max_visible пунктов
+    var sm := SoulMenu.new()
+    add_child(sm)
+    var many: Array = []
+    for i in range(30):
+        many.append("пункт %d" % i)
+    sm.max_visible = 10
+    sm.setup(many)
+    var vr: Vector2i = sm.visible_range()
+    check(vr.y - vr.x == 10, "SoulMenu показывает окно в 10 пунктов из 30")
+    sm.index = 25
+    sm._ensure_visible()
+    vr = sm.visible_range()
+    check(vr.x <= 25 and 25 < vr.y, "курсор на 25-м — окно доехало до него")
+    sm.free()
+    # 3. спрайт есть у ЛЮБОГО ключа инвентаря (снаряга/ресурсы/еда/зелья/трофеи)
+    var all_ok := true
+    for id in DataDB.items:
+        if not Sprites.has(Sprites.item_key(id)):
+            all_ok = false
+    for res in DataDB.resources:
+        if not Sprites.has(Sprites.item_key(res)):
+            all_ok = false
+    for f in DataDB.food:
+        if not Sprites.has(Sprites.item_key(str(f[0]))):
+            all_ok = false
+    check(all_ok, "у всех предметов/ресурсов/еды есть спрайт (122 предмета + 27 ресурсов)")
+    check(Sprites.item_key("зелье свэга") == "item_potion_swag"
+          and Sprites.item_key("зелье уворота") == "item_potion_evade"
+          and Sprites.item_key("череп Калитина") == "item_skull"
+          and Sprites.item_key("карманный вентилятор") == "ventil"
+          and Sprites.item_key("ОЗУ") == "res_ram"
+          and Sprites.item_key("оберег Ямполь") == "item_charm_yampol"
+          and Sprites.item_key("weapon_0_5") != Sprites.item_key("weapon_0_0")
+          and Sprites.item_key("ring_poison_5") == "item_ring_poison",
+          "спрайты различают тиры оружия, эффекты колец и особые вещи")
+    # 4. инвентарь: вкладки раскладывают предметы по категориям
+    GameState.new_game("Барахольщик")
+    var p := GameState.player
+    p.add_item("weapon_0_2")
+    p.add_item("ржавая руда", 5)
+    p.add_item("зелье свэга")
+    p.add_item("череп Калитина")
+    var inv = load("res://scenes/Inventory.tscn").instantiate()
+    add_child(inv)
+    check(inv._build_tab("weapon").size() == 1, "вкладка ОРУЖИЕ видит меч")
+    var loot: Array = inv._build_tab("loot")
+    check(loot.size() == 1 and loot[0]["key"] == "ржавая руда"
+          and int(loot[0]["qty"]) == 5, "вкладка ДОБЫЧА: руда ×5 с ценой")
+    check(inv._build_tab("supplies").size() == 1, "вкладка ПРИПАСЫ видит зелье")
+    var q: Array = inv._build_tab("quest")
+    check(q.size() == 1 and q[0]["key"] == "череп Калитина", "вкладка КВЕСТ видит трофей")
+    # квестовый резерв: ОЗУ при взятом (но не сданном) квесте Попова — в КВЕСТ
+    # и не продаётся; сдал — снова обычная добыча
+    p.add_item("ОЗУ")
+    check(inv._build_tab("loot").size() == 2, "ОЗУ без квеста — обычная добыча")
+    p.flags["popov_ozu_taken"] = true
+    check(Quests.fetch_reserved(p).has("ОЗУ"), "квест взят → ОЗУ в резерве")
+    var lq: Array = inv._build_tab("quest")
+    var in_quest := false
+    for e in lq:
+        if e["key"] == "ОЗУ":
+            in_quest = "не продаётся" in str(e["sub"])
+    check(in_quest and inv._build_tab("loot").size() == 1,
+          "ОЗУ переехало в КВЕСТ (🔒) и пропало из ДОБЫЧИ")
+    var sold: Array = Econ.sell_all(p, 1.0)
+    check(p.has_item("ОЗУ") and "придержано" in str(sold[2]),
+          "скупщик не забирает зарезервированное ОЗУ")
+    p.flags["popov_ozu_done"] = true
+    check(not Quests.fetch_reserved(p).has("ОЗУ")
+          and inv._build_tab("loot").size() == 1 + int(p.has_item("ржавая руда")),
+          "квест сдан → резерв снят, ОЗУ снова в ДОБЫЧЕ")
+    # квестовые обереги — настоящие предметы: лежат в ОБЕРЕГАХ и надеваются
+    p.add_item("оберег Ямполь")
+    var tt: Array = inv._build_tab("trinket")
+    check(tt.size() == 1 and tt[0]["key"] == "оберег Ямполь",
+          "оберег Ямполь — во вкладке ОБЕРЕГИ, а не в КВЕСТ")
+    Items.equip(p, "оберег Ямполь")
+    check(p.equipment["trinket"] == "оберег Ямполь", "квестовый оберег надевается")
+    Items.unequip(p, "trinket")
+    p.remove_item("оберег Ямполь")
+    # надеть/снять через вкладку
+    inv.tab_i = 0
+    inv._rebuild()
+    inv._activate(inv.entries[0])                    # надеть меч
+    check(p.equipment["weapon"] == "weapon_0_2", "ENTER во вкладке надевает")
+    check(str(inv.entries[0]["action"]) == "unequip", "надетое — первым, со «снять»")
+    inv._activate(inv.entries[0])                    # снять
+    check(p.equipment["weapon"] == null, "повторный ENTER снимает")
+    # скролл списка: 20 предметов, окно 8
+    for i in range(20):
+        p.add_item("предмет-заглушка %02d" % i)
+    inv.tab_i = 7                                    # КВЕСТ
+    inv.sel_i = 15
+    inv._rebuild()
+    check(inv.scroll > 0 and inv.sel_i - inv.scroll < inv.ROWS_VISIBLE,
+          "список скроллится к выбранному (scroll=%d)" % inv.scroll)
+    inv.free()
+    # 5. HUD-панель: refresh собирает состояние, тост-сообщение попадает в text
+    var hud := HudPanel.new()
+    add_child(hud)
+    hud.refresh("Тестовая Топь", "💾 сохранено")
+    check("Тестовая Топь" in hud.text and "♥" in hud.text and "кринж" in hud.text
+          and "сохранено" in hud.text, "HUD: локация, полосы и тост в состоянии")
+    hud.free()
+    # 6. NPC: длинная речь листается страницами, меню спрятано до конца
+    var ns = load("res://scenes/NPC.tscn").instantiate()
+    ns.kind = "yampol"
+    add_child(ns)
+    var long_lines: Array = []
+    for i in range(12):
+        long_lines.append("Ямполь вещает о сигма-энергии болота, часть %d. " % i + "бу".repeat(40))
+    ns._speak(long_lines)
+    check(ns._pages.size() > 1, "длинная речь NPC разбита на страницы")
+    ns._rebuild_options()
+    check(not ns.menu.visible, "пока речь листается — меню опций спрятано")
+    ns._page_i = ns._pages.size() - 1
+    ns._show_page()
+    check(ns.menu.visible, "на последней странице меню вернулось")
+    ns.free()
+    # 7. бой: длинный лог (победа над боссом с кучей строк) тоже постраничный
+    var ar = load("res://scenes/Battle.tscn").instantiate()
+    ar.enemy = ["Манекен", 30, 5]
+    add_child(ar)
+    var big: Array = []
+    for i in range(16):
+        big.append("Строка исхода боя %d — " % i + "лут".repeat(25))
+    ar._show_lines(big, func(): pass)
+    check(ar._pages.size() > 1 and ar.log_label.text == ar._pages[0],
+          "длинный боевой лог разбит на страницы (не налезает на статы)")
+    ar._advance_message()      # дописать страницу
+    ar._advance_message()      # следующая страница
+    check(ar._page_i == 1 and ar.log_label.text == ar._pages[1],
+          "ENTER листает боевой лог дальше")
+    ar.free()
+
+
 func _test_world() -> void:
     print("\n-- мир (спавн/порталы/гейт) --")
     GameState.new_game("Мир")
@@ -568,6 +831,10 @@ func _test_world() -> void:
         if c.has_method("_begin_bullets"):  # это Battle-арена
             spawned = true
     check(spawned, "F2 → вызов боя с боссом спавнит Battle-арену")
+    # зум камеры и миникарта
+    check(ow.cam.zoom == Vector2(2, 2), "камера приближена (зум x2)")
+    check(is_instance_valid(ow.minimap) and ow.minimap.ow == ow,
+          "миникарта подключена к надмиру")
     ow.free()
 
 
@@ -749,14 +1016,77 @@ func _test_dungeon() -> void:
     check(true, "60 этажей сгенерированы без зависаний")
     check(ok_path, "ряд дверей всегда проходим (путь гарантирован)")
     check(kinds.size() >= 5, "комнаты разнообразны (%d видов)" % kinds.size())
-    # расписание боссов
+    # расписание боссов (20-этажный цикл)
     dg._enter_room(5, false)
     check(dg.st.mobs.size() == 1 and str(dg.st.mobs[0].enemy[0]) == "Надзиратель Пекла",
-          "этаж 5 — мини-босс Надзиратель")
+          "этаж 5 — стражник Надзиратель")
     dg._enter_room(10, false)
-    check(str(dg.st.mobs[0].enemy[0]) == "Магистр Пекла", "этаж 10 — босс Магистр Пекла")
-    dg._enter_room(25, false)
-    check(str(dg.st.mobs[0].enemy[0]) == "ТМ", "этаж 25 — ТМ")
+    check(str(dg.st.mobs[0].enemy[0]) == "Магистр Пекла", "этаж 10 — мини-босс Магистр Пекла")
+    var guards_ok := true
+    for gf in [11, 13, 17, 19]:
+        dg._enter_room(gf, false)
+        if str(dg.st.mobs[0].enemy[0]) != "Надзиратель Пекла":
+            guards_ok = false
+    check(guards_ok, "этажи 11/13/17/19 — стражник каждые 2 этажа")
+    dg._enter_room(15, false)
+    check(str(dg.st.mobs[0].enemy[0]) == "Магистр Пекла", "этаж 15 — снова мини-босс")
+    dg._enter_room(20, false)
+    check(str(dg.st.mobs[0].enemy[0]) == "ТМ", "этаж 20 — ТМ")
+    dg._enter_room(40, false)
+    check(str(dg.st.mobs[0].enemy[0]) == "ТМ", "этаж 40 — ТМ снова (цикл повторяется)")
+    # стражник: злее по урону, но тоньше (короткая жёсткая стычка)
+    var guard: Array = dg._boss_enemy(11, "mini")
+    check(int(guard[2]) > 8 + 5 and int(guard[1]) < 65 + 11 * 6,
+          "стражник бьёт больнее, но HP меньше старого")
+    # после ТМ: «Пепельные» твари жирнее и злее, чем до ТМ на том же прогрессе
+    var pre_tm: Array = dg._mob_enemy(19)
+    var post_tm: Array = dg._mob_enemy(21)
+    check(str(post_tm[0]).begins_with("Пепельный "),
+          "после ТМ мобы становятся «Пепельными»")
+    check(int(post_tm[1]) > int(pre_tm[1]) and int(post_tm[2]) >= int(pre_tm[2]),
+          "после ТМ мобы жирнее (%d>%d HP)" % [int(post_tm[1]), int(pre_tm[1])])
+    check(dg._cycle_of(20) == 0 and dg._cycle_of(21) == 1 and dg._cycle_of(41) == 2,
+          "циклы Пекла считаются по 20 этажей")
+    # сундуки: с 10 этажа бывают двойные; после ТМ их стабильно больше;
+    # золотые встречаются (шанс 5%+)
+    seed(777)
+    var saw_double := false
+    var saw_gold := false
+    var post_min := 99
+    for _i in range(120):
+        var r1: Dictionary = dg._gen_room(12, "plain")
+        if r1.chests.size() >= 2:
+            saw_double = true
+        var r2: Dictionary = dg._gen_room(25, "plain")
+        post_min = mini(post_min, r2.chests.size())
+        for cc in r2.chests + r1.chests:
+            if cc.get("gold", false):
+                saw_gold = true
+    check(saw_double, "с 10 этажа выпадают двойные сундуки")
+    check(post_min >= 1, "после ТМ на этаже всегда есть сундук (их больше)")
+    check(saw_gold, "золотые сундуки существуют")
+    var tm_room: Dictionary = dg._gen_room(20, "tm")
+    check(tm_room.chests[0].get("gold", false), "у ТМ сундук всегда золотой")
+    # новые твари и золотой сундук имеют спрайты
+    var news_ok := true
+    for nm in ["Летучая Кринж-Мышь", "Магмовый Голем", "Горелый Сигма-Бес",
+               "Призрак Забоя", "Лавовый Слизень", "Пепельный Магмовый Голем"]:
+        if Sprites.mob_key(nm) == "mob":
+            news_ok = false
+    check(news_ok and Sprites.has("chest_gold"), "новые твари Пекла и золотой сундук со спрайтами")
+    # водяное озеро: рыбы безвредны (не копят плевки)
+    var wr: Dictionary = dg._gen_room(3, "water_lake")
+    var water_ok: bool = wr.fish.size() >= 2
+    for wf in wr.fish:
+        if not wf.get("water", false):
+            water_ok = false
+    dg.st = wr
+    dg.rooms[3] = wr
+    dg.depth = 3
+    dg.projectiles.clear()
+    for _t in range(200):
+        dg._fish_step(0.05)
+    check(water_ok and dg.projectiles.is_empty(), "водяные рыбы — декор, не плюются")
     # дверь заперта пока мобы живы; после зачистки открыта
     dg._enter_room(3, false)
     var was_alive: bool = not dg._all_dead()
