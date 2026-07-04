@@ -10,6 +10,7 @@ var player: Player
 
 var name_label: Label
 var speech: Label
+var more_label: Label          # «▼ ENTER» при многостраничной речи
 var menu: SoulMenu
 var pcolor: Color
 
@@ -22,6 +23,10 @@ var answers: Array = []
 var current_choice: Dictionary = {}   # активная choice-опция (для one-time once_flag)
 var _full := ""
 var _reveal := 0.0
+var _pages: Array = []                # длинная речь бьётся на страницы (▼ ENTER),
+var _page_i := 0                      # чтобы не налезать на меню опций снизу
+const SPEECH_CHARS_PER_LINE := 50     # ширина 452px, шрифт 15 — оценка переноса
+const SPEECH_MAX_ROWS := 7            # речь 62..~218, меню с 230 — не залезаем
 
 const COLORS := {
     "PURPLE": "#9b5cff", "TOXIC": "#6ee66e", "SICK": "#9acd32", "CYAN": "#35d6d6",
@@ -55,12 +60,16 @@ func _build_ui() -> void:
     name_label.add_theme_color_override("font_color", pcolor)
 
     speech = _label("", 15, Vector2(164, 62), 452, HORIZONTAL_ALIGNMENT_LEFT)
-    speech.size = Vector2(452, 130)
+    speech.size = Vector2(452, 156)
     speech.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+
+    more_label = _label("", 12, Vector2(164, 210), 452, HORIZONTAL_ALIGNMENT_RIGHT)
+    more_label.add_theme_color_override("font_color", Color("#7a7a94"))
 
     menu = SoulMenu.new()
     menu.position = Vector2(40, 230)
     menu.line_h = 22
+    menu.max_visible = 10          # у торговцев много опций — скролл, не за экран
     add_child(menu)
     menu.chosen.connect(_on_opt)
     menu.cancelled.connect(_on_cancel)
@@ -84,10 +93,25 @@ func _rand(arr: Array) -> String:
 
 
 func _speak(lines: Array) -> void:
-    _full = "\n".join(lines)
+    ## Длинная речь бьётся на страницы: пока листаем — меню спрятано,
+    ## текст никогда не налезает на опции (фикс наложения у торговцев).
+    _pages = UiText.paginate(lines, SPEECH_CHARS_PER_LINE, SPEECH_MAX_ROWS)
+    _page_i = 0
+    _show_page()
+
+
+func _show_page() -> void:
+    _full = _pages[_page_i]
     speech.text = _full
     speech.visible_characters = 0
     _reveal = 0.0
+    if _page_i < _pages.size() - 1:
+        more_label.text = "▼ ENTER (ещё %d)" % (_pages.size() - _page_i - 1)
+        menu.hide_menu()
+    else:
+        more_label.text = ""
+        if not menu.options.is_empty():
+            menu.show_menu()
 
 
 func _draw() -> void:
@@ -128,6 +152,8 @@ func _rebuild_options() -> void:
         visible_options.append(opt)
         labels.append(opt.get("label", "..."))
     menu.setup(labels)
+    if _page_i < _pages.size() - 1:
+        menu.hide_menu()       # речь ещё листается — меню появится на последней странице
 
 
 # ─────────────── выбор опции ───────────────
@@ -264,7 +290,12 @@ func _apply_answer(ans: Dictionary) -> void:
 
 
 func _unhandled_input(event: InputEvent) -> void:
-    if event.is_action_pressed("ui_accept") and speech.visible_characters != -1 \
-            and speech.visible_characters < _full.length():
-        speech.visible_characters = -1
+    if not event.is_action_pressed("ui_accept"):
+        return
+    if speech.visible_characters != -1 and speech.visible_characters < _full.length():
+        speech.visible_characters = -1       # дописать страницу мгновенно
+        accept_event()
+    elif _page_i < _pages.size() - 1:        # листнуть длинную речь дальше
+        _page_i += 1
+        _show_page()
         accept_event()

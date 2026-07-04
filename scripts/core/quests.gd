@@ -33,6 +33,32 @@ static func givable(player: Player, kind: String) -> Array:
     return out
 
 
+static func fetch_reserved(player: Player) -> Dictionary:
+    ## Вещи, которые СЕЙЧАС нужно отдать по одноразовой fetch-сдаче NPC
+    ## (например ОЗУ для Попова): {имя: true}. Такие вещи лежат во вкладке
+    ## КВЕСТ инвентаря и НЕ продаются скупщикам, пока сдача не закрыта — потом
+    ## флаги прячут опцию, резерв снимается и вещь становится обычной добычей.
+    ## Повторяемые обмены (без set_flag/once_flag, как у Деда) — НЕ резерв.
+    var out: Dictionary = {}
+    for kind in DataDB.npcs:
+        for opt in DataDB.npcs[kind].get("options", []):
+            if opt.get("kind", "") != "fetch":
+                continue
+            if not (opt.has("set_flag") or opt.has("once_flag")):
+                continue               # повторяемый обмен — не квестовый резерв
+            if opt.has("req_flag") and not player.flags.get(opt["req_flag"], false):
+                continue
+            if opt.has("req_not_flag") and player.flags.get(opt["req_not_flag"], false):
+                continue
+            if opt.has("once_flag") and player.flags.get(opt["once_flag"], false):
+                continue
+            if opt.has("req_level") and player.level < int(opt["req_level"]):
+                continue
+            for item in opt.get("items", {}):
+                out[item] = true
+    return out
+
+
 static func ready(player: Player, kind: String) -> Array:
     var out: Array = []
     for qid in DataDB.quests:

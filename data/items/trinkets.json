@@ -348,5 +348,51 @@
     "buy": 300,
     "sell": 75,
     "base": 4
+  },
+  {
+    "id": "оберег Ямполь",
+    "name": "оберег Ямполь",
+    "slot": "trinket",
+    "tier": 1,
+    "color": "purple",
+    "buffs": {
+      "swag": 1,
+      "crit": 2
+    },
+    "buy": 0,
+    "sell": 0,
+    "base": 0,
+    "quest_only": true,
+    "no_sell": true
+  },
+  {
+    "id": "детская погремушка-бурмолда",
+    "name": "детская погремушка-бурмолда",
+    "slot": "trinket",
+    "tier": 1,
+    "color": "gold",
+    "buffs": {
+      "hp": 3
+    },
+    "buy": 0,
+    "sell": 0,
+    "base": 0,
+    "quest_only": true,
+    "no_sell": true
+  },
+  {
+    "id": "антиспам-оберег",
+    "name": "антиспам-оберег",
+    "slot": "trinket",
+    "tier": 2,
+    "color": "steel",
+    "buffs": {
+      "def": 2
+    },
+    "buy": 0,
+    "sell": 0,
+    "base": 0,
+    "quest_only": true,
+    "no_sell": true
   }
 ]

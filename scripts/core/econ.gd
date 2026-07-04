@@ -27,20 +27,32 @@ static func total_value(player: Player) -> int:
 
 static func sell_all(player: Player, premium := 1.0) -> Array:
     ## -> [total, count, lines]. premium — множитель цены (щедрые скупщики).
+    ## Вещи под активную квестовую сдачу (Quests.fetch_reserved, например ОЗУ
+    ## для Попова) придерживаются — скупщик их не заберёт, пока квест не закрыт.
     var items := resource_items(player)
-    if items.is_empty():
-        return [0, 0, ["Нет ресурсов на продажу. Иди добудь чего-нибудь."]]
+    var reserved := Quests.fetch_reserved(player)
     var total := 0
     var count := 0
     var lines: Array = []
+    var held: Array = []
     for pair in items:
         var it = pair[0]
+        if reserved.has(it):
+            held.append(str(it))
+            continue
         var q := int(pair[1])
         var val := int(price(it) * q * premium)
         total += val
         count += q
         player.remove_item(it, q)
         lines.append("  %s x%d → %d бурмолды" % [it, q, val])
-    player.burmolda += total
-    lines.append("ИТОГО: +%d бурмолды за %d шт." % [total, count])
+    if count == 0 and held.is_empty():
+        return [0, 0, ["Нет ресурсов на продажу. Иди добудь чего-нибудь."]]
+    if count > 0:
+        player.burmolda += total
+        lines.append("ИТОГО: +%d бурмолды за %d шт." % [total, count])
+    else:
+        lines.append("Продавать нечего — всё остальное придержано.")
+    if not held.is_empty():
+        lines.append("🔒 придержано для квеста: %s" % ", ".join(PackedStringArray(held)))
     return [total, count, lines]

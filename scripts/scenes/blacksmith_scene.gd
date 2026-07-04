@@ -27,6 +27,7 @@ func _ready() -> void:
     menu = SoulMenu.new()
     menu.position = Vector2(40, 140)
     menu.line_h = 22
+    menu.max_visible = 13      # большая сумка — список скроллится, не утекает за экран
     add_child(menu)
     menu.chosen.connect(_on_choose)
     menu.cancelled.connect(_on_cancel)
